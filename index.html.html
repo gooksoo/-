@@ -28,24 +28,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .field input,.field textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--text);background:#fafbff;outline:none;transition:border-color .15s,box-shadow .15s}
 .field input:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08);background:white}
 .field textarea{min-height:80px;resize:vertical}
-.type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.type-btn{padding:16px 10px;border:2px solid var(--border);border-radius:var(--radius);background:#fafbff;font-size:14px;font-weight:800;color:var(--text-sub);cursor:pointer;text-align:center;transition:all .15s;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:6px;line-height:1}
-.type-btn .type-icon{font-size:24px;line-height:1}
-.type-btn.sel-inquiry{border-color:#f59e0b;background:#fffbeb;color:#92400e;box-shadow:0 2px 12px rgba(245,158,11,.15)}
-.type-btn.sel-visit{border-color:var(--primary);background:var(--primary-light);color:var(--primary);box-shadow:0 2px 12px rgba(37,99,235,.12)}
 .source-columns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .source-col{display:flex;flex-direction:column;gap:6px}
 .col-header{font-size:10px;font-weight:800;letter-spacing:.5px;padding:6px 10px;border-radius:7px;text-align:center;margin-bottom:2px}
 .col-header.offline{background:var(--offline-light);color:#065f46}
 .col-header.online{background:var(--online-light);color:#0c4a6e}
 .col-header.other{background:var(--other-light);color:#4c1d95}
-.source-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .source-btn{width:100%;padding:11px 6px;border:1.5px solid var(--border);border-radius:9px;background:#fafbff;font-size:12px;font-weight:700;color:var(--text-sub);cursor:pointer;text-align:center;transition:all .12s;font-family:inherit;line-height:1.35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:44px}
 .source-btn .src-sub{font-size:9px;font-weight:500;opacity:.7}
 .source-btn.sel-offline{border-color:var(--offline);background:var(--offline-light);color:#065f46;font-weight:800}
 .source-btn.sel-online{border-color:var(--online);background:var(--online-light);color:#0c4a6e;font-weight:800}
 .source-btn.sel-other{border-color:var(--other);background:var(--other-light);color:#4c1d95;font-weight:800}
-.source-btn.sel-inquiry{border-color:var(--inquiry);background:var(--inquiry-light);color:#1e293b;font-weight:800}
 .inline-extra{margin-top:6px;padding:12px;background:white;border-radius:9px;border:1.5px solid var(--primary-mid);width:100%}
 .inline-extra label{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;display:block;line-height:1.5}
 .inline-extra input{width:100%;padding:9px 11px;border:1.5px solid var(--primary-mid);border-radius:7px;font-size:13px;font-family:inherit;background:#fafbff;outline:none}
@@ -70,20 +63,27 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .del-btn{background:#fee2e2;border:none;cursor:pointer;color:#ef4444;font-size:12px;font-weight:700;padding:4px 10px;border-radius:7px;font-family:inherit}
 .badge-row{display:flex;gap:5px;flex-wrap:wrap}
 .badge{display:inline-flex;align-items:center;gap:3px;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700}
-.badge-inquiry{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
-.badge-visit{background:var(--primary-light);color:var(--primary);border:1px solid var(--primary-mid)}
 .badge-offline{background:var(--offline-light);color:#065f46;border:1px solid #6ee7b7}
 .badge-online{background:var(--online-light);color:#0c4a6e;border:1px solid #7dd3fc}
 .badge-other{background:var(--other-light);color:#4c1d95;border:1px solid #c4b5fd}
-.badge-route{background:var(--inquiry-light);color:#334155;border:1px solid #cbd5e1}
 .record-note{font-size:12px;color:var(--text-sub);background:#f8faff;border-radius:7px;padding:7px 10px;margin-top:8px}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-.stat-card{border-radius:12px;padding:14px 10px;text-align:center}
-.stat-card.blue{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
-.stat-card.green{background:linear-gradient(135deg,#059669,#10b981);color:white}
-.stat-card.amber{background:linear-gradient(135deg,#f59e0b,#d97706);color:white}
-.stat-value{font-size:26px;font-weight:900}
-.stat-label{font-size:10px;opacity:.85;margin-top:3px}
+.total-stat-card{text-align:center;padding:20px}
+.total-stat-value{font-size:38px;font-weight:900;color:var(--primary)}
+.total-stat-label{font-size:12px;color:var(--text-muted);margin-top:4px;font-weight:700}
+.feedback-card{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:var(--radius);margin-bottom:12px;border:1.5px solid var(--border)}
+.feedback-card.up{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#6ee7b7}
+.feedback-card.down{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#fca5a5}
+.feedback-card.same{background:#f1f5f9;border-color:#cbd5e1}
+.feedback-icon{font-size:30px;flex-shrink:0}
+.feedback-text{font-size:13px;font-weight:800;line-height:1.5;color:var(--text)}
+.pie-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;padding:6px 0}
+.pie-chart{width:140px;height:140px;border-radius:50%;flex-shrink:0;position:relative}
+.pie-chart::after{content:'';position:absolute;inset:24px;background:var(--white);border-radius:50%}
+.pie-legend{display:flex;flex-direction:column;gap:10px;font-size:12px}
+.pie-legend-item{display:flex;align-items:center;gap:8px}
+.pie-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.pie-legend-label{font-weight:700;min-width:54px}
+.pie-legend-value{color:var(--text-muted)}
 .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .filter-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:99px;background:white;font-size:12px;font-weight:700;color:var(--text-sub);cursor:pointer;font-family:inherit;transition:all .12s}
 .filter-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
@@ -94,7 +94,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .section-label.offline{background:var(--offline-light);color:#065f46}
 .section-label.online{background:var(--online-light);color:#0c4a6e}
 .section-label.other{background:var(--other-light);color:#4c1d95}
-.section-label.inquiry{background:#fffbeb;color:#92400e}
 .bar-row{margin-bottom:10px}
 .bar-meta{display:flex;justify-content:space-between;margin-bottom:4px}
 .bar-label{font-size:12px;color:var(--text)}
@@ -140,23 +139,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <div class="content">
-  <!-- FORM (3-step wizard) -->
+  <!-- FORM (2-step wizard, visit only) -->
   <div class="page active" id="page-form">
 
-    <!-- STEP 1: 기본정보 + 유형선택 -->
+    <!-- STEP 1: 기본정보 -->
     <div class="step active" id="step1">
       <div class="card">
         <div class="card-title">기본 정보</div>
         <div class="field"><label>이름 *</label><input type="text" id="inp-name" placeholder="고객 이름"></div>
         <div class="field"><label>연락처</label><input type="tel" id="inp-phone" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)"></div>
         <div class="field"><label>날짜</label><input type="date" id="inp-date"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">유형 선택 *</div>
-        <div class="type-row">
-          <button class="type-btn" id="btn-inquiry" onclick="selectType('inquiry')"><span class="type-icon">📞</span>문의</button>
-          <button class="type-btn" id="btn-visit" onclick="selectType('visit')"><span class="type-icon">🚶</span>방문</button>
-        </div>
       </div>
       <button class="submit-btn" onclick="goStep2()">다음</button>
     </div>
@@ -203,11 +195,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
   <!-- STATS -->
   <div class="page" id="page-stats">
-    <div class="stats-grid">
-      <div class="stat-card blue"><div class="stat-value" id="statTotal">0</div><div class="stat-label">전체</div></div>
-      <div class="stat-card green"><div class="stat-value" id="statVisit">0</div><div class="stat-label">방문</div></div>
-      <div class="stat-card amber"><div class="stat-value" id="statInquiry">0</div><div class="stat-label">문의</div></div>
+
+    <div class="card total-stat-card">
+      <div class="total-stat-value" id="statTotal">0</div>
+      <div class="total-stat-label">전체 방문 (선택 기간)</div>
     </div>
+
+    <div class="feedback-card" id="feedbackCard">
+      <div class="feedback-icon" id="feedbackIcon">📊</div>
+      <div class="feedback-text" id="feedbackText">분석 중입니다...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">방문 경로 비율</div>
+      <div class="pie-wrap">
+        <div class="pie-chart" id="pieChart"></div>
+        <div class="pie-legend" id="pieLegend"></div>
+      </div>
+    </div>
+
     <div class="card" style="padding:14px">
       <div class="filter-row">
         <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
@@ -221,20 +227,19 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         <button class="filter-btn active" onclick="renderStats()" style="padding:8px 14px;white-space:nowrap">적용</button>
       </div>
     </div>
+
     <div class="card">
       <div class="card-title">방문 경로별 현황</div>
       <div class="section-label offline">오프라인</div><div id="chart-offline"></div>
       <div class="section-label online">온라인</div><div id="chart-online"></div>
       <div class="section-label other">기타</div><div id="chart-other"></div>
     </div>
-    <div class="card">
-      <div class="card-title">문의 경로별 현황</div>
-      <div class="section-label inquiry">문의 경로</div><div id="chart-inquiry"></div>
-    </div>
+
     <div class="card">
       <div class="card-title">주차별 현황</div>
       <div style="overflow-x:auto" id="weekTable"></div>
     </div>
+
     <div class="card">
       <div class="card-title">일별 현황</div>
       <div style="overflow-x:auto" id="dayTable"></div>
@@ -287,28 +292,11 @@ const VISIT_OTHER=[
  {id:"workout",label:"재방문 후 등록(워크아웃)"},
  {id:"return",label:"복귀회원(재등록)"}
 ];
-const INQUIRY_SOURCES=[
- {id:"naverbook",label:"네이버예약"},
- {id:"phone",label:"전화"},
- {id:"sms",label:"문자"},
- {id:"toktok",label:"톡톡"},
- {id:"instagram",label:"인스타그램"},
- {id:"daangn_q",label:"당근"},
- {id:"dajim_q",label:"다짐"},
- {id:"nijim_q",label:"니짐내짐"},
- {id:"soomgo_q",label:"숨고"},
- {id:"woondoc_q",label:"운동닥터"},
- {id:"kakao_q",label:"카카오채널/카톡"},
- {id:"etc_q",label:"기타문의경로"}
-];
-
-const SOURCE_MAP={};
-[...VISIT_OFFLINE,...VISIT_ONLINE,...VISIT_OTHER,...INQUIRY_SOURCES].forEach(s=>SOURCE_MAP[s.id]=s.label);
 
 let records=JSON.parse(localStorage.getItem("gym_v5")||"[]");
-let selectedType="",selectedSource="",selectedCat="",selectedLabel="";
+let selectedSource="",selectedCat="",selectedLabel="";
 let selNeedsKeyword=false,selNeedsName=false;
-let lastRenderedType=null;
+let sourceRendered=false;
 let currentFilter="all";
 let statsUnlocked=false;
 let pendingStatsEl=null;
@@ -317,33 +305,21 @@ let pendingStatsEl=null;
 
 function formatPhone(i){let v=i.value.replace(/\D/g,"");if(v.length<=3)i.value=v;else if(v.length<=7)i.value=v.slice(0,3)+"-"+v.slice(3);else i.value=v.slice(0,3)+"-"+v.slice(3,7)+"-"+v.slice(7,11);}
 
-function selectType(type){
-  selectedType=type;
-  document.getElementById("btn-inquiry").className="type-btn"+(type==="inquiry"?" sel-inquiry":"");
-  document.getElementById("btn-visit").className="type-btn"+(type==="visit"?" sel-visit":"");
-}
-
 function btnHTML(s,cat){
-  const sub = s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog" ? `<span class="src-sub">(네이버)</span>` : "";
+  const sub = (s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog") ? `<span class="src-sub">(네이버)</span>` : "";
   const label = s.label.replace("(네이버)","");
   return `<button class="source-btn" onclick="selectSource('${s.id}','${cat}','${s.label}',${s.kw?1:0},${s.nm?1:0},this)">${label}${sub}</button>`;
 }
 
 function renderSourceStep(){
   const card=document.getElementById("sourceCard");
-  if(selectedType==="visit"){
-    card.innerHTML=`
-      <div class="card-question">어떻게 저희 센터를 알고 오셨나요?</div>
-      <div class="source-columns">
-        <div class="source-col"><div class="col-header offline">오프라인</div>${VISIT_OFFLINE.map(s=>btnHTML(s,"offline")).join("")}</div>
-        <div class="source-col"><div class="col-header online">온라인</div>${VISIT_ONLINE.map(s=>btnHTML(s,"online")).join("")}</div>
-        <div class="source-col"><div class="col-header other">기타</div>${VISIT_OTHER.map(s=>btnHTML(s,"other")).join("")}</div>
-      </div>`;
-  }else{
-    card.innerHTML=`
-      <div class="card-question">어떤 경로로 문의 주셨나요?</div>
-      <div class="source-grid-2">${INQUIRY_SOURCES.map(s=>btnHTML(s,"inquiry")).join("")}</div>`;
-  }
+  card.innerHTML=`
+    <div class="card-question">어떻게 저희 센터를 알고 오셨나요?</div>
+    <div class="source-columns">
+      <div class="source-col"><div class="col-header offline">오프라인</div>${VISIT_OFFLINE.map(s=>btnHTML(s,"offline")).join("")}</div>
+      <div class="source-col"><div class="col-header online">온라인</div>${VISIT_ONLINE.map(s=>btnHTML(s,"online")).join("")}</div>
+      <div class="source-col"><div class="col-header other">기타</div>${VISIT_OTHER.map(s=>btnHTML(s,"other")).join("")}</div>
+    </div>`;
 }
 
 function selectSource(id,cat,label,kw,nm,btnEl){
@@ -356,7 +332,7 @@ function selectSource(id,cat,label,kw,nm,btnEl){
   const area=document.getElementById("inlineExtra");
   area.innerHTML="";
   if(selNeedsKeyword){
-    area.innerHTML=`<div class="inline-extra"><label>검색어를 입력해주세요</label><input type="text" id="inp-keyword" placeholder="예: 부산 헬스장, 해운대 PT"></div>`;
+    area.innerHTML=`<div class="inline-extra"><label>검색어를 입력해주세요</label><input type="text" id="inp-keyword" placeholder="예: 강남 헬스장, 강남역 PT"></div>`;
   }
   if(selNeedsName){
     area.innerHTML=`<div class="inline-extra"><label>소개해주신 지인의 성함을 입력해주세요. 소개왕 등극시, 상품을 드립니다</label><input type="text" id="inp-refname" placeholder="지인 성함"></div>`;
@@ -377,13 +353,9 @@ function goStep(n){
 function goStep2(){
   const name=document.getElementById("inp-name").value.trim();
   if(!name){showToast("이름을 입력해주세요");return;}
-  if(!selectedType){showToast("문의 / 방문을 선택해주세요");return;}
-  if(selectedType!==lastRenderedType){
+  if(!sourceRendered){
     renderSourceStep();
-    lastRenderedType=selectedType;
-    selectedSource="";selectedCat="";selectedLabel="";selNeedsKeyword=false;selNeedsName=false;
-    document.getElementById("inlineExtra").innerHTML="";
-    document.getElementById("selectedRouteDisplay").textContent="-";
+    sourceRendered=true;
   }
   goStep(2);
 }
@@ -398,7 +370,7 @@ function submitForm(){
     name:document.getElementById("inp-name").value.trim(),
     phone:document.getElementById("inp-phone").value.trim(),
     date:document.getElementById("inp-date").value,
-    type:selectedType,source:selectedSource,sourceCat:selectedCat,
+    type:"visit",source:selectedSource,sourceCat:selectedCat,
     sourceLabel:selectedLabel,
     keyword:document.getElementById("inp-keyword")?.value.trim()||"",
     refname:document.getElementById("inp-refname")?.value.trim()||"",
@@ -420,11 +392,9 @@ function resetForm(){
   document.getElementById("inp-date").value=new Date().toISOString().slice(0,10);
   document.getElementById("inlineExtra").innerHTML="";
   document.getElementById("selectedRouteDisplay").textContent="-";
-  document.getElementById("btn-inquiry").className="type-btn";
-  document.getElementById("btn-visit").className="type-btn";
-  selectedType="";selectedSource="";selectedCat="";selectedLabel="";
-  selNeedsKeyword=false;selNeedsName=false;lastRenderedType=null;
-  document.getElementById("sourceCard").innerHTML="";
+  document.querySelectorAll("#sourceCard .source-btn").forEach(b=>b.className="source-btn");
+  selectedSource="";selectedCat="";selectedLabel="";
+  selNeedsKeyword=false;selNeedsName=false;
   goStep(1);
 }
 
@@ -468,17 +438,15 @@ function renderList(){
   const el=document.getElementById("recordList");
   if(!filtered.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>등록된 기록이 없습니다</div></div>`;return;}
   el.innerHTML=filtered.map(r=>{
-    const tb=r.type==="inquiry"?`<span class="badge badge-inquiry">문의</span>`:`<span class="badge badge-visit">방문</span>`;
-    const catClass=r.sourceCat==="inquiry"?"route":(r.sourceCat||"route");
-    const sb=r.sourceLabel?`<span class="badge badge-${catClass}">${r.sourceLabel}</span>`:"";
-    const kb=r.keyword?`<span class="badge badge-${catClass}">🔎 ${r.keyword}</span>`:"";
+    const sb=r.sourceLabel?`<span class="badge badge-${r.sourceCat}">${r.sourceLabel}</span>`:"";
+    const kb=r.keyword?`<span class="badge badge-${r.sourceCat}">🔎 ${r.keyword}</span>`:"";
     const rb=r.refname?`<span class="badge badge-other">👤 ${r.refname}</span>`:"";
     return `<div class="record-card">
       <div class="record-top">
         <div><span class="record-name">${r.name}</span>${r.phone?`<span class="record-phone">${r.phone}</span>`:""}</div>
         <div style="display:flex;align-items:center;gap:6px"><span class="record-date">${r.date||""}</span><button class="del-btn" onclick="deleteRecord(${r.id})">✕ 삭제</button></div>
       </div>
-      <div class="badge-row">${tb}${sb}${kb}${rb}</div>
+      <div class="badge-row">${sb}${kb}${rb}</div>
       ${r.memo?`<div class="record-note">${r.memo}</div>`:""}
     </div>`;
   }).join("");
@@ -493,53 +461,145 @@ function setFilter(f,el){
 
 function getFiltered(){
   const today=new Date().toISOString().slice(0,10),now=new Date();
-  if(currentFilter==="today")return records.filter(r=>r.date===today);
-  if(currentFilter==="week"){const day=now.getDay(),mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));return records.filter(r=>r.date>=mon.toISOString().slice(0,10)&&r.date<=today);}
-  if(currentFilter==="month")return records.filter(r=>r.date?.slice(0,7)===today.slice(0,7));
-  if(currentFilter==="custom"){const fr=document.getElementById("dateFrom").value,to=document.getElementById("dateTo").value;return records.filter(r=>(!fr||r.date>=fr)&&(!to||r.date<=to));}
-  return records;
+  const base=records.filter(r=>r.type!=="inquiry");
+  if(currentFilter==="today")return base.filter(r=>r.date===today);
+  if(currentFilter==="week"){const day=now.getDay(),mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));return base.filter(r=>r.date>=mon.toISOString().slice(0,10)&&r.date<=today);}
+  if(currentFilter==="month")return base.filter(r=>r.date?.slice(0,7)===today.slice(0,7));
+  if(currentFilter==="custom"){const fr=document.getElementById("dateFrom").value,to=document.getElementById("dateTo").value;return base.filter(r=>(!fr||r.date>=fr)&&(!to||r.date<=to));}
+  return base;
+}
+
+function getWeekRange(offset){
+  const now=new Date();
+  const day=now.getDay();
+  const mon=new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1)+offset*7);
+  const sun=new Date(mon);
+  sun.setDate(mon.getDate()+6);
+  return {start:mon.toISOString().slice(0,10), end:sun.toISOString().slice(0,10)};
+}
+
+function renderFeedback(){
+  const base=records.filter(r=>r.type!=="inquiry");
+  const thisW=getWeekRange(0), lastW=getWeekRange(-1);
+  const thisCount=base.filter(r=>r.date>=thisW.start && r.date<=thisW.end).length;
+  const lastCount=base.filter(r=>r.date>=lastW.start && r.date<=lastW.end).length;
+  const diff=thisCount-lastCount;
+  const card=document.getElementById("feedbackCard");
+  const icon=document.getElementById("feedbackIcon");
+  const text=document.getElementById("feedbackText");
+
+  let pct;
+  if(lastCount===0){ pct = thisCount===0 ? 0 : 100; }
+  else { pct = Math.round(Math.abs(diff)/lastCount*100); }
+
+  card.classList.remove("up","down","same");
+  if(diff>0){
+    card.classList.add("up");
+    icon.textContent="📈";
+    text.textContent=`전 주 대비 총 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;
+  }else if(diff<0){
+    card.classList.add("down");
+    icon.textContent="📉";
+    text.textContent=`전 주 대비 총 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;
+  }else{
+    card.classList.add("same");
+    icon.textContent="➖";
+    text.textContent=`전 주 대비 총 방문자 수가 동일합니다 (${thisCount}명)`;
+  }
+}
+
+function renderPie(visits){
+  const total=visits.length;
+  const counts={
+    offline:visits.filter(r=>r.sourceCat==="offline").length,
+    online:visits.filter(r=>r.sourceCat==="online").length,
+    other:visits.filter(r=>r.sourceCat==="other").length
+  };
+  const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
+  const labels={offline:"오프라인",online:"온라인",other:"기타"};
+  const pieEl=document.getElementById("pieChart");
+  const legendEl=document.getElementById("pieLegend");
+
+  if(total===0){
+    pieEl.style.background="#f1f5f9";
+    legendEl.innerHTML=`<div style="color:var(--text-muted);font-size:12px">데이터가 없습니다</div>`;
+    return;
+  }
+
+  let acc=0;
+  const segments=[];
+  ["offline","online","other"].forEach(cat=>{
+    const pct=counts[cat]/total*100;
+    segments.push(`${colors[cat]} ${acc}% ${acc+pct}%`);
+    acc+=pct;
+  });
+  pieEl.style.background=`conic-gradient(${segments.join(",")})`;
+
+  legendEl.innerHTML=["offline","online","other"].map(cat=>{
+    const pct=Math.round(counts[cat]/total*100);
+    return `<div class="pie-legend-item"><span class="pie-dot" style="background:${colors[cat]}"></span><span class="pie-legend-label">${labels[cat]}</span><span class="pie-legend-value">${counts[cat]}건 (${pct}%)</span></div>`;
+  }).join("");
 }
 
 function renderStats(){
-  const filtered=getFiltered(),visits=filtered.filter(r=>r.type==="visit"),inquiries=filtered.filter(r=>r.type==="inquiry");
+  const filtered=getFiltered();
   document.getElementById("statTotal").textContent=filtered.length;
-  document.getElementById("statVisit").textContent=visits.length;
-  document.getElementById("statInquiry").textContent=inquiries.length;
+
+  renderFeedback();
+  renderPie(filtered);
 
   const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
   [{elId:"chart-offline",arr:VISIT_OFFLINE,cat:"offline"},{elId:"chart-online",arr:VISIT_ONLINE,cat:"online"},{elId:"chart-other",arr:VISIT_OTHER,cat:"other"}]
   .forEach(({elId,arr,cat})=>{
-    const stats=arr.map(s=>({label:s.label,count:visits.filter(r=>r.source===s.id).length}));
+    const stats=arr.map(s=>({label:s.label,count:filtered.filter(r=>r.source===s.id).length}));
     const max=Math.max(...stats.map(s=>s.count),1);
     document.getElementById(elId).innerHTML=stats.map(s=>`<div class="bar-row"><div class="bar-meta"><span class="bar-label">${s.label}</span><span class="bar-count" style="color:${colors[cat]}">${s.count}건</span></div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/max)*100}%;background:${colors[cat]}"></div></div></div>`).join("");
   });
 
-  // 문의 경로별
-  const istats=INQUIRY_SOURCES.map(s=>({label:s.label,count:inquiries.filter(r=>r.source===s.id).length}));
-  const imax=Math.max(...istats.map(s=>s.count),1);
-  document.getElementById("chart-inquiry").innerHTML=istats.map(s=>`<div class="bar-row"><div class="bar-meta"><span class="bar-label">${s.label}</span><span class="bar-count" style="color:#d97706">${s.count}건</span></div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/imax)*100}%;background:#f59e0b"></div></div></div>`).join("");
-
-  renderTable("weekTable",filtered,true);
-  renderTable("dayTable",filtered,false);
+  renderWeekTable(filtered);
+  renderDayTable(filtered);
 }
 
-function getWeek(d){const dt=new Date(d),st=new Date(dt.getFullYear(),0,1),w=Math.ceil(((dt-st)/86400000+st.getDay()+1)/7);return `${dt.getFullYear()}년 ${w}주차`;}
+function getWeekKey(d){
+  const dt=new Date(d);
+  const y=dt.getFullYear(), m=dt.getMonth()+1, day=dt.getDate();
+  const w=Math.ceil(day/7);
+  const key=`${y}${String(m).padStart(2,"0")}${w}`;
+  const label=`${y}년 ${m}월 ${w}주차`;
+  return {key,label};
+}
 
-function renderTable(elId,filtered,isWeek){
+function renderWeekTable(filtered){
   const map={};
   filtered.forEach(r=>{
     if(!r.date)return;
-    const k=isWeek?getWeek(r.date):r.date;
-    if(!map[k])map[k]={total:0,visit:0,inquiry:0,offline:0,online:0,other:0};
-    map[k].total++;
-    if(r.type==="visit"){map[k].visit++;map[k][r.sourceCat||"other"]++;}
-    if(r.type==="inquiry")map[k].inquiry++;
+    const {key,label}=getWeekKey(r.date);
+    if(!map[key])map[key]={label,total:0,offline:0,online:0,other:0};
+    map[key].total++;
+    map[key][r.sourceCat||"other"]++;
   });
-  const keys=Object.keys(map).sort(isWeek?undefined:(a,b)=>b.localeCompare(a));
-  if(!keys.length){document.getElementById(elId).innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
-  document.getElementById(elId).innerHTML=`<table class="data-table">
-    <tr><th>기간</th><th>전체</th><th>방문</th><th>문의</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>
-    ${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].visit}</td><td style="color:#f59e0b">${map[k].inquiry}</td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}
+  const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
+  if(!keys.length){document.getElementById("weekTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
+  document.getElementById("weekTable").innerHTML=`<table class="data-table">
+    <tr><th>기간</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>
+    ${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${map[k].label}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}
+  </table>`;
+}
+
+function renderDayTable(filtered){
+  const map={};
+  filtered.forEach(r=>{
+    if(!r.date)return;
+    if(!map[r.date])map[r.date]={total:0,offline:0,online:0,other:0};
+    map[r.date].total++;
+    map[r.date][r.sourceCat||"other"]++;
+  });
+  const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
+  if(!keys.length){document.getElementById("dayTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
+  document.getElementById("dayTable").innerHTML=`<table class="data-table">
+    <tr><th>날짜</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>
+    ${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}
   </table>`;
 }
 
@@ -549,8 +609,8 @@ function deleteRecord(id){
 }
 
 function exportCSV(){
-  const h=["날짜","이름","연락처","유형","분류","경로","검색어","지인이름","메모"];
-  const rows=records.map(r=>[r.date,r.name,r.phone,r.type==="visit"?"방문":"문의",r.sourceCat||"",r.sourceLabel||"",r.keyword||"",r.refname||"",r.memo||""]);
+  const h=["날짜","이름","연락처","분류","경로","검색어","지인이름","메모"];
+  const rows=records.map(r=>[r.date,r.name,r.phone,r.sourceCat||"",r.sourceLabel||"",r.keyword||"",r.refname||"",r.memo||""]);
   const csv=[h,...rows].map(row=>row.map(v=>`"${(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));
   a.download=`고객기록_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast("CSV 저장 완료!");
