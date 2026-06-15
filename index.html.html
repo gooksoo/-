@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -44,6 +45,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .inline-extra input{width:100%;padding:9px 11px;border:1.5px solid var(--primary-mid);border-radius:7px;font-size:13px;font-family:inherit;background:#fafbff;outline:none}
 .submit-btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(37,99,235,.28);transition:transform .1s;letter-spacing:-.3px}
 .submit-btn:active{transform:scale(.98)}
+.skip-btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:13px;font-weight:700;background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;margin-top:8px;text-decoration:underline}
 .back-btn{background:none;border:none;color:var(--primary);font-size:13px;font-weight:800;cursor:pointer;padding:6px 4px 14px;font-family:inherit;display:flex;align-items:center;gap:4px}
 .success-screen{text-align:center;padding:60px 20px}
 .success-icon{font-size:52px;margin-bottom:16px}
@@ -186,7 +188,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
           </select>
         </div>
       </div>
-      <button class="submit-btn" onclick="submitForm()">저장하기</button>
+      <button class="submit-btn" onclick="submitForm(false)">저장하기</button>
+      <button class="skip-btn" onclick="submitForm(true)">건너뛰기 (담당자 없이 저장)</button>
     </div>
 
     <!-- SUCCESS -->
@@ -370,8 +373,8 @@ async function syncToSheet(r){
   catch(e){console.warn("시트 연동 실패",e);}
 }
 
-async function syncDeleteToSheet(id){
-  try{await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"delete",id})});}
+async function syncDeleteToSheet(rec){
+  try{await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"delete",date:rec.date,visitTime:rec.visitTime,name:rec.name,phone:rec.phone})});}
   catch(e){console.warn("시트 삭제 동기화 실패",e);}
 }
 
@@ -396,9 +399,9 @@ function goStep2(){
   goStep(2);
 }
 
-function submitForm(){
-  const staff=document.getElementById("inp-staff").value;
-  if(!staff){showToast("담당자를 선택해주세요");return;}
+function submitForm(skipStaff){
+  const staff=skipStaff ? "" : document.getElementById("inp-staff").value;
+  if(!skipStaff && !staff){showToast("담당자를 선택해주세요");return;}
   if(!selectedSource){showToast("경로를 선택해주세요");goStep(2);return;}
   if(selNeedsKeyword && !document.getElementById("inp-keyword")?.value.trim()){showToast("검색어를 입력해주세요");goStep(3);return;}
   if(selNeedsName && !document.getElementById("inp-refname")?.value.trim()){showToast("지인 성함을 입력해주세요");goStep(3);return;}
@@ -646,10 +649,11 @@ function renderDayTable(filtered){
 }
 
 function deleteRecord(id){
+  const rec=records.find(r=>r.id===id);
   if(!confirm("이 기록을 삭제할까요?\n(구글 시트에서도 함께 삭제됩니다)"))return;
   records=records.filter(r=>r.id!==id);
   save();renderList();showToast("삭제되었습니다");
-  syncDeleteToSheet(id);
+  if(rec)syncDeleteToSheet(rec);
 }
 
 function exportCSV(){
