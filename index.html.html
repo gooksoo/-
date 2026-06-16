@@ -70,15 +70,29 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .badge-other{background:var(--other-light);color:#4c1d95;border:1px solid #c4b5fd}
 .badge-staff{background:var(--primary-light);color:var(--primary);border:1px solid var(--primary-mid)}
 .record-note{font-size:12px;color:var(--text-sub);background:#f8faff;border-radius:7px;padding:7px 10px;margin-top:8px}
-.total-stat-card{text-align:center;padding:20px}
-.total-stat-value{font-size:38px;font-weight:900;color:var(--primary)}
-.total-stat-label{font-size:12px;color:var(--text-muted);margin-top:4px;font-weight:700}
-.feedback-card{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:var(--radius);margin-bottom:12px;border:1.5px solid var(--border)}
-.feedback-card.up{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#6ee7b7}
-.feedback-card.down{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#fca5a5}
-.feedback-card.same{background:#f1f5f9;border-color:#cbd5e1}
-.feedback-icon{font-size:30px;flex-shrink:0}
-.feedback-text{font-size:13px;font-weight:800;line-height:1.5;color:var(--text)}
+.total-stat-card{padding:20px}
+.summary-row{display:flex;align-items:center;gap:16px}
+.summary-left{display:flex;flex-direction:column;align-items:center;min-width:80px}
+.total-stat-value{font-size:38px;font-weight:900;color:var(--primary);line-height:1}
+.total-stat-label{font-size:11px;color:var(--text-muted);margin-top:4px;font-weight:700;text-align:center}
+.summary-divider{width:1px;height:60px;background:var(--border);flex-shrink:0}
+.summary-feedback{flex:1}
+.feedback-inline{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border)}
+.feedback-inline.up{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#6ee7b7}
+.feedback-inline.down{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#fca5a5}
+.feedback-inline.same{background:#f1f5f9;border-color:#cbd5e1}
+.feedback-icon{font-size:22px;flex-shrink:0}
+.feedback-text{font-size:12px;font-weight:700;line-height:1.5;color:var(--text)}
+.cat-section{margin-bottom:8px}
+.cat-section-inner{display:flex;align-items:flex-start;gap:12px}
+.cat-bars{flex:1}
+.cat-pie-wrap{width:90px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.cat-pie{width:70px;height:70px;border-radius:50%;position:relative;flex-shrink:0}
+.cat-pie::after{content:'';position:absolute;inset:14px;background:var(--white);border-radius:50%}
+.cat-pie-legend{display:flex;flex-direction:column;gap:3px;width:100%}
+.cat-pie-item{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700}
+.cat-pie-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cat-pie-pct{color:var(--text-muted)}
 .pie-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;padding:6px 0}
 .pie-chart{width:140px;height:140px;border-radius:50%;flex-shrink:0;position:relative}
 .pie-chart::after{content:'';position:absolute;inset:24px;background:var(--white);border-radius:50%}
@@ -215,13 +229,19 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="page" id="page-stats">
 
     <div class="card total-stat-card">
-      <div class="total-stat-value" id="statTotal">0</div>
-      <div class="total-stat-label">전체 방문 (선택 기간)</div>
-    </div>
-
-    <div class="feedback-card" id="feedbackCard">
-      <div class="feedback-icon" id="feedbackIcon">📊</div>
-      <div class="feedback-text" id="feedbackText">분석 중입니다...</div>
+      <div class="summary-row">
+        <div class="summary-left">
+          <div class="total-stat-value" id="statTotal">0</div>
+          <div class="total-stat-label">전체 방문</div>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-feedback">
+          <div class="feedback-inline" id="feedbackCard">
+            <div class="feedback-icon" id="feedbackIcon">📊</div>
+            <div class="feedback-text" id="feedbackText">분석 중...</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -248,9 +268,27 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
     <div class="card">
       <div class="card-title">방문 경로별 현황</div>
-      <div class="section-label offline">오프라인</div><div id="chart-offline"></div>
-      <div class="section-label online">온라인</div><div id="chart-online"></div>
-      <div class="section-label other">기타</div><div id="chart-other"></div>
+      <div class="cat-section">
+        <div class="section-label offline">오프라인</div>
+        <div class="cat-section-inner">
+          <div class="cat-bars" id="chart-offline"></div>
+          <div class="cat-pie-wrap"><div class="cat-pie" id="pie-offline"></div><div class="cat-pie-legend" id="legend-offline"></div></div>
+        </div>
+      </div>
+      <div class="cat-section">
+        <div class="section-label online">온라인</div>
+        <div class="cat-section-inner">
+          <div class="cat-bars" id="chart-online"></div>
+          <div class="cat-pie-wrap"><div class="cat-pie" id="pie-online"></div><div class="cat-pie-legend" id="legend-online"></div></div>
+        </div>
+      </div>
+      <div class="cat-section">
+        <div class="section-label other">기타</div>
+        <div class="cat-section-inner">
+          <div class="cat-bars" id="chart-other"></div>
+          <div class="cat-pie-wrap"><div class="cat-pie" id="pie-other"></div><div class="cat-pie-legend" id="legend-other"></div></div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -533,25 +571,13 @@ function renderFeedback(){
   const card=document.getElementById("feedbackCard");
   const icon=document.getElementById("feedbackIcon");
   const text=document.getElementById("feedbackText");
-
   let pct;
-  if(lastCount===0){ pct = thisCount===0 ? 0 : 100; }
-  else { pct = Math.round(Math.abs(diff)/lastCount*100); }
-
+  if(lastCount===0){pct=thisCount===0?0:100;}
+  else{pct=Math.round(Math.abs(diff)/lastCount*100);}
   card.classList.remove("up","down","same");
-  if(diff>0){
-    card.classList.add("up");
-    icon.textContent="📈";
-    text.textContent=`전 주 대비 총 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;
-  }else if(diff<0){
-    card.classList.add("down");
-    icon.textContent="📉";
-    text.textContent=`전 주 대비 총 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;
-  }else{
-    card.classList.add("same");
-    icon.textContent="➖";
-    text.textContent=`전 주 대비 총 방문자 수가 동일합니다 (${thisCount}명)`;
-  }
+  if(diff>0){card.classList.add("up");icon.textContent="📈";text.textContent=`전 주 대비 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;}
+  else if(diff<0){card.classList.add("down");icon.textContent="📉";text.textContent=`전 주 대비 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;}
+  else{card.classList.add("same");icon.textContent="➖";text.textContent=`전 주 대비 방문자 수가 동일합니다 (${thisCount}명)`;}
 }
 
 function renderPie(visits){
@@ -587,19 +613,48 @@ function renderPie(visits){
   }).join("");
 }
 
+function renderCatPie(pieId, legendId, stats, color){
+  const total=stats.reduce((s,i)=>s+i.count,0);
+  const pieEl=document.getElementById(pieId);
+  const legendEl=document.getElementById(legendId);
+  if(total===0){
+    pieEl.style.background="#f1f5f9";
+    legendEl.innerHTML="";
+    return;
+  }
+  // 색상 팔레트 (항목별로 명도 변형)
+  const palette=stats.map((_,i)=>{
+    const alpha=1-i*(0.6/Math.max(stats.length-1,1));
+    return color+(Math.round(alpha*255).toString(16).padStart(2,"0"));
+  });
+  // conic-gradient
+  let acc=0;
+  const segs=stats.map((s,i)=>{
+    const pct=s.count/total*100;
+    const seg=`${palette[i]} ${acc}% ${acc+pct}%`;
+    acc+=pct;
+    return seg;
+  });
+  pieEl.style.background=`conic-gradient(${segs.join(",")})`;
+  // 범례 (0건 제외)
+  legendEl.innerHTML=stats.filter(s=>s.count>0).map((s,i)=>{
+    const pct=Math.round(s.count/total*100);
+    return `<div class="cat-pie-item"><span class="cat-pie-dot" style="background:${palette[i]}"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.label}</span><span class="cat-pie-pct">${pct}%</span></div>`;
+  }).join("");
+}
+
 function renderStats(){
   const filtered=getFiltered();
   document.getElementById("statTotal").textContent=filtered.length;
-
   renderFeedback();
   renderPie(filtered);
-
   const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
   [{elId:"chart-offline",arr:VISIT_OFFLINE,cat:"offline"},{elId:"chart-online",arr:VISIT_ONLINE,cat:"online"},{elId:"chart-other",arr:VISIT_OTHER,cat:"other"}]
   .forEach(({elId,arr,cat})=>{
     const stats=arr.map(s=>({label:s.label,count:filtered.filter(r=>r.source===s.id).length}));
     const max=Math.max(...stats.map(s=>s.count),1);
     document.getElementById(elId).innerHTML=stats.map(s=>`<div class="bar-row"><div class="bar-meta"><span class="bar-label">${s.label}</span><span class="bar-count" style="color:${colors[cat]}">${s.count}건</span></div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/max)*100}%;background:${colors[cat]}"></div></div></div>`).join("");
+    renderCatPie(`pie-${cat}`,`legend-${cat}`,stats,colors[cat]);
   });
 
   renderWeekTable(filtered);
