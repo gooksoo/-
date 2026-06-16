@@ -138,6 +138,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .modal-btn{flex:1;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .modal-btn.cancel{background:#f1f5f9;color:#475569}
 .modal-btn.confirm{background:var(--primary);color:white}
+.refresh-btn{width:100%;padding:13px;border:1.5px solid var(--primary);border-radius:12px;background:var(--primary-light);color:var(--primary);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:all .15s}
+.refresh-btn:active{background:var(--primary);color:white}
+.refresh-btn.loading{opacity:.6;pointer-events:none}
 </style>
 </head>
 <body>
@@ -300,6 +303,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="card-title">일별 현황</div>
       <div style="overflow-x:auto" id="dayTable"></div>
     </div>
+
+    <button class="refresh-btn" id="refreshBtn" onclick="syncFromSheet()">
+      🔄 시트에서 최신 데이터 불러오기
+    </button>
   </div>
 </div>
 
@@ -367,6 +374,35 @@ async function loadStaffList(){
     const sel=document.getElementById("inp-staff");
     sel.innerHTML=`<option value="">담당자 선택</option>`+staff.map(s=>`<option value="${s}">${s}</option>`).join("");
   }catch(e){console.warn("담당자 목록 로드 실패",e);}
+}
+
+async function syncFromSheet(){
+  const btn=document.getElementById("refreshBtn");
+  btn.classList.add("loading");
+  btn.textContent="⏳ 불러오는 중...";
+  try{
+    const res=await fetch(SHEET_URL);
+    const data=await res.json();
+
+    if(data.records && data.records.length>=0){
+      records=data.records;
+      save();
+      renderStats();
+      showToast(`✅ 시트에서 ${records.length}건 불러왔어요!`);
+    }
+
+    // 담당자 목록도 업데이트
+    if(data.staff){
+      const sel=document.getElementById("inp-staff");
+      sel.innerHTML=`<option value="">담당자 선택</option>`+data.staff.map(s=>`<option value="${s}">${s}</option>`).join("");
+    }
+  }catch(e){
+    showToast("❌ 불러오기 실패. 인터넷 연결을 확인해주세요");
+    console.warn("시트 동기화 실패",e);
+  }finally{
+    btn.classList.remove("loading");
+    btn.innerHTML="🔄 시트에서 최신 데이터 불러오기";
+  }
 }
 
 function formatPhone(i){let v=i.value.replace(/\D/g,"");if(v.length<=3)i.value=v;else if(v.length<=7)i.value=v.slice(0,3)+"-"+v.slice(3);else i.value=v.slice(0,3)+"-"+v.slice(3,7)+"-"+v.slice(7,11);}
