@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -16,6 +15,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .header-title{font-size:16px;font-weight:900;letter-spacing:-.5px}
 .header-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.branch-badge{display:inline-block;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;letter-spacing:.3px;margin-top:3px}
 .tabs{display:flex}
 .tab{flex:1;padding:9px 8px;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;text-align:center}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
@@ -141,14 +141,35 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .refresh-btn{width:100%;padding:13px;border:1.5px solid var(--primary);border-radius:12px;background:var(--primary-light);color:var(--primary);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:all .15s}
 .refresh-btn:active{background:var(--primary);color:white}
 .refresh-btn.loading{opacity:.6;pointer-events:none}
+/* 지점 없음 오류 화면 */
+.error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px}
+.error-icon{font-size:52px;margin-bottom:16px}
+.error-title{font-size:18px;font-weight:900;color:#ef4444;margin-bottom:8px}
+.error-sub{font-size:13px;color:var(--text-muted);line-height:1.6}
 </style>
 </head>
 <body>
+
+<!-- 지점 파라미터 없을 때 오류 화면 -->
+<div id="errorScreen" style="display:none">
+  <div class="error-screen">
+    <div class="error-icon">⚠️</div>
+    <div class="error-title">지점 정보가 없습니다</div>
+    <div class="error-sub">올바른 지점 URL로 접속해주세요.<br>예: <strong>?branch=건대점</strong></div>
+  </div>
+</div>
+
+<!-- 정상 앱 화면 -->
+<div id="appRoot" style="display:none">
 <div class="header">
   <div class="header-inner">
     <div class="header-top">
       <div class="logo">🏋️</div>
-      <div><div class="header-title">고객 방문 관리</div><div class="header-sub" id="totalCount">총 0건 기록</div></div>
+      <div>
+        <div class="header-title">고객 방문 관리</div>
+        <div class="branch-badge" id="branchBadge"></div>
+        <div class="header-sub" id="totalCount">총 0건 기록</div>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('form',this)">✏️ 입력</button>
@@ -157,12 +178,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     </div>
   </div>
 </div>
-
 <div class="content">
-  <!-- FORM (2-step wizard, visit only) -->
+  <!-- FORM -->
   <div class="page active" id="page-form">
-
-    <!-- STEP 1: 기본정보 -->
     <div class="step active" id="step1">
       <div class="card">
         <div class="card-title">기본 정보</div>
@@ -172,14 +190,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       </div>
       <button class="submit-btn" onclick="goStep2()">다음</button>
     </div>
-
-    <!-- STEP 2: 경로 선택 -->
     <div class="step" id="step2">
       <button class="back-btn" onclick="goStep(1)">← 이전 화면</button>
       <div class="card" id="sourceCard"></div>
     </div>
-
-    <!-- STEP 3: 추가입력 + 메모 + 저장 -->
     <div class="step" id="step3">
       <button class="back-btn" onclick="goStep(2)">← 이전 화면</button>
       <div class="selected-route-box">
@@ -193,23 +207,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       </div>
       <button class="submit-btn" onclick="goStep4()">다음</button>
     </div>
-
-    <!-- STEP 4: 담당자 선택 -->
     <div class="step" id="step4">
       <button class="back-btn" onclick="goStep(3)">← 이전 화면</button>
       <div class="card">
         <div class="card-question">담당한 직원을 선택해주세요</div>
         <div class="field" style="margin-bottom:0">
-          <select id="inp-staff">
-            <option value="">담당자 선택</option>
-          </select>
+          <select id="inp-staff"><option value="">담당자 선택</option></select>
         </div>
       </div>
       <button class="submit-btn" onclick="submitForm(false)">저장하기</button>
       <button class="skip-btn" onclick="submitForm(true)">건너뛰기 (담당자 없이 저장)</button>
     </div>
-
-    <!-- SUCCESS -->
     <div id="successArea" style="display:none">
       <div class="success-screen">
         <div class="success-icon">✅</div>
@@ -218,7 +226,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       </div>
     </div>
   </div>
-
   <!-- LIST -->
   <div class="page" id="page-list">
     <div class="search-row">
@@ -227,10 +234,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     </div>
     <div id="recordList"></div>
   </div>
-
   <!-- STATS -->
   <div class="page" id="page-stats">
-
     <div class="card total-stat-card">
       <div class="summary-row">
         <div class="summary-left">
@@ -246,7 +251,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">방문 경로 비율</div>
       <div class="pie-wrap">
@@ -254,7 +258,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         <div class="pie-legend" id="pieLegend"></div>
       </div>
     </div>
-
     <div class="card" style="padding:14px">
       <div class="filter-row">
         <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
@@ -268,7 +271,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         <button class="filter-btn active" onclick="renderStats()" style="padding:8px 14px;white-space:nowrap">적용</button>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">방문 경로별 현황</div>
       <div class="cat-section">
@@ -293,22 +295,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">주차별 현황</div>
       <div style="overflow-x:auto" id="weekTable"></div>
     </div>
-
     <div class="card">
       <div class="card-title">일별 현황</div>
       <div style="overflow-x:auto" id="dayTable"></div>
     </div>
-
     <button class="refresh-btn" id="refreshBtn" onclick="syncFromSheet()">
       🔄 시트에서 최신 데이터 불러오기
     </button>
   </div>
 </div>
+</div><!-- /appRoot -->
 
 <!-- PASSWORD MODAL -->
 <div class="modal-overlay" id="pwModal">
@@ -323,11 +323,34 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
-const SHEET_URL="https://script.google.com/macros/s/AKfycbxJvhm10vx90KoQey2ejKnM3kzCHrEcJ7HoaK2kkU5DZQmid8CDiVcTkYxZlaQxk363/exec";
+// ── 지점 설정 ──────────────────────────────────────────────────────────
+// ★ GAS 배포 후 아래 URL을 교체하세요 ★
+const MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbx8MZDlOGUh6BvS-LVS1FdeDOmGr8zNnlgkcoQTt_sAoTDos0t8kGZWiCnzHjdH_wg/exec";
+
+const BRANCH = new URLSearchParams(window.location.search).get('branch') || '';
+const STORAGE_KEY = 'gym_v5_' + BRANCH;
+const SHEET_URL   = MASTER_GAS_URL;
+
+// 지점 없으면 오류 화면 표시
+if (!BRANCH) {
+  document.getElementById('errorScreen').style.display = 'block';
+} else {
+  document.getElementById('appRoot').style.display = 'block';
+  document.getElementById('branchBadge').textContent = BRANCH;
+  init();
+}
+
+function init() {
+  document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
+  updateTotal();
+  loadStaffList();
+}
+
+// ── 데이터 ────────────────────────────────────────────────────────────
+let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
 const VISIT_OFFLINE=[
  {id:"sign",label:"간판"},
@@ -356,7 +379,6 @@ const VISIT_OTHER=[
  {id:"return",label:"복귀회원(재등록)"}
 ];
 
-let records=JSON.parse(localStorage.getItem("gym_v5")||"[]");
 let selectedSource="",selectedCat="",selectedLabel="";
 let selNeedsKeyword=false,selNeedsName=false;
 let sourceRendered=false;
@@ -364,11 +386,10 @@ let currentFilter="all";
 let statsUnlocked=false;
 let pendingStatsEl=null;
 
-(function(){document.getElementById("inp-date").value=new Date().toISOString().slice(0,10);updateTotal();loadStaffList();})();
-
+// ── 직원 목록 로드 ────────────────────────────────────────────────────
 async function loadStaffList(){
   try{
-    const res=await fetch(SHEET_URL);
+    const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH));
     const data=await res.json();
     const staff=data.staff||[];
     const sel=document.getElementById("inp-staff");
@@ -376,22 +397,17 @@ async function loadStaffList(){
   }catch(e){console.warn("담당자 목록 로드 실패",e);}
 }
 
+// ── 시트 동기화 ───────────────────────────────────────────────────────
 async function syncFromSheet(){
   const btn=document.getElementById("refreshBtn");
-  btn.classList.add("loading");
-  btn.textContent="⏳ 불러오는 중...";
+  btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";
   try{
-    const res=await fetch(SHEET_URL);
+    const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH));
     const data=await res.json();
-
     if(data.records && data.records.length>=0){
-      records=data.records;
-      save();
-      renderStats();
+      records=data.records;save();renderStats();
       showToast(`✅ 시트에서 ${records.length}건 불러왔어요!`);
     }
-
-    // 담당자 목록도 업데이트
     if(data.staff){
       const sel=document.getElementById("inp-staff");
       sel.innerHTML=`<option value="">담당자 선택</option>`+data.staff.map(s=>`<option value="${s}">${s}</option>`).join("");
@@ -405,14 +421,29 @@ async function syncFromSheet(){
   }
 }
 
+// ── 시트 저장 ─────────────────────────────────────────────────────────
+async function syncToSheet(r){
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({...r,branch:BRANCH})});
+  }catch(e){console.warn("시트 연동 실패",e);}
+}
+
+async function syncDeleteToSheet(rec){
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"delete",branch:BRANCH,date:rec.date,visitTime:rec.visitTime,name:rec.name,phone:rec.phone})});
+  }catch(e){console.warn("시트 삭제 동기화 실패",e);}
+}
+
+// ── 폼 ────────────────────────────────────────────────────────────────
 function formatPhone(i){let v=i.value.replace(/\D/g,"");if(v.length<=3)i.value=v;else if(v.length<=7)i.value=v.slice(0,3)+"-"+v.slice(3);else i.value=v.slice(0,3)+"-"+v.slice(3,7)+"-"+v.slice(7,11);}
 
 function btnHTML(s,cat){
-  const sub = (s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog") ? `<span class="src-sub">(네이버)</span>` : "";
-  const label = s.label.replace("(네이버)","");
+  const sub=(s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog")?`<span class="src-sub">(네이버)</span>`:"";
+  const label=s.label.replace("(네이버)","");
   return `<button class="source-btn" onclick="selectSource('${s.id}','${cat}','${s.label}',${s.kw?1:0},${s.nm?1:0},this)">${label}${sub}</button>`;
 }
-
 function renderSourceStep(){
   const card=document.getElementById("sourceCard");
   card.innerHTML=`
@@ -423,63 +454,35 @@ function renderSourceStep(){
       <div class="source-col"><div class="col-header other">기타</div>${VISIT_OTHER.map(s=>btnHTML(s,"other")).join("")}</div>
     </div>`;
 }
-
 function selectSource(id,cat,label,kw,nm,btnEl){
   selectedSource=id;selectedCat=cat;selectedLabel=label;
   selNeedsKeyword=!!kw;selNeedsName=!!nm;
   document.querySelectorAll("#sourceCard .source-btn").forEach(b=>{b.className="source-btn";});
   btnEl.classList.add("sel-"+cat);
   document.getElementById("selectedRouteDisplay").textContent=label;
-
-  const area=document.getElementById("inlineExtra");
-  area.innerHTML="";
-  if(selNeedsKeyword){
-    area.innerHTML=`<div class="inline-extra"><label>검색어를 입력해주세요</label><input type="text" id="inp-keyword" placeholder="예: 강남 헬스장, 강남역 PT"></div>`;
-  }
-  if(selNeedsName){
-    area.innerHTML=`<div class="inline-extra"><label>소개해주신 지인의 성함을 입력해주세요. 소개왕 등극시, 상품을 드립니다</label><input type="text" id="inp-refname" placeholder="지인 성함"></div>`;
-  }
+  const area=document.getElementById("inlineExtra");area.innerHTML="";
+  if(selNeedsKeyword)area.innerHTML=`<div class="inline-extra"><label>검색어를 입력해주세요</label><input type="text" id="inp-keyword" placeholder="예: 강남 헬스장, 강남역 PT"></div>`;
+  if(selNeedsName)area.innerHTML=`<div class="inline-extra"><label>소개해주신 지인의 성함을 입력해주세요. 소개왕 등극시, 상품을 드립니다</label><input type="text" id="inp-refname" placeholder="지인 성함"></div>`;
   setTimeout(()=>goStep(3),180);
 }
-
-async function syncToSheet(r){
-  try{await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(r)});}
-  catch(e){console.warn("시트 연동 실패",e);}
-}
-
-async function syncDeleteToSheet(rec){
-  try{await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"delete",date:rec.date,visitTime:rec.visitTime,name:rec.name,phone:rec.phone})});}
-  catch(e){console.warn("시트 삭제 동기화 실패",e);}
-}
-
-function goStep(n){
-  document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));
-  document.getElementById("step"+n).classList.add("active");
-}
-
-function goStep4(){
-  if(selNeedsKeyword && !document.getElementById("inp-keyword")?.value.trim()){showToast("검색어를 입력해주세요");return;}
-  if(selNeedsName && !document.getElementById("inp-refname")?.value.trim()){showToast("지인 성함을 입력해주세요");return;}
-  goStep(4);
-}
-
+function goStep(n){document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));document.getElementById("step"+n).classList.add("active");}
 function goStep2(){
   const name=document.getElementById("inp-name").value.trim();
   if(!name){showToast("이름을 입력해주세요");return;}
-  if(!sourceRendered){
-    renderSourceStep();
-    sourceRendered=true;
-  }
+  if(!sourceRendered){renderSourceStep();sourceRendered=true;}
   goStep(2);
 }
-
+function goStep4(){
+  if(selNeedsKeyword&&!document.getElementById("inp-keyword")?.value.trim()){showToast("검색어를 입력해주세요");return;}
+  if(selNeedsName&&!document.getElementById("inp-refname")?.value.trim()){showToast("지인 성함을 입력해주세요");return;}
+  goStep(4);
+}
 function submitForm(skipStaff){
-  const staff=skipStaff ? "" : document.getElementById("inp-staff").value;
-  if(!skipStaff && !staff){showToast("담당자를 선택해주세요");return;}
+  const staff=skipStaff?"":document.getElementById("inp-staff").value;
+  if(!skipStaff&&!staff){showToast("담당자를 선택해주세요");return;}
   if(!selectedSource){showToast("경로를 선택해주세요");goStep(2);return;}
-  if(selNeedsKeyword && !document.getElementById("inp-keyword")?.value.trim()){showToast("검색어를 입력해주세요");goStep(3);return;}
-  if(selNeedsName && !document.getElementById("inp-refname")?.value.trim()){showToast("지인 성함을 입력해주세요");goStep(3);return;}
-
+  if(selNeedsKeyword&&!document.getElementById("inp-keyword")?.value.trim()){showToast("검색어를 입력해주세요");goStep(3);return;}
+  if(selNeedsName&&!document.getElementById("inp-refname")?.value.trim()){showToast("지인 성함을 입력해주세요");goStep(3);return;}
   const record={
     id:Date.now(),
     name:document.getElementById("inp-name").value.trim(),
@@ -495,15 +498,10 @@ function submitForm(skipStaff){
     createdAt:new Date().toLocaleString("ko-KR")
   };
   records.unshift(record);save();syncToSheet(record);
-
   document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));
   document.getElementById("successArea").style.display="block";
-  setTimeout(()=>{
-    document.getElementById("successArea").style.display="none";
-    resetForm();
-  },1800);
+  setTimeout(()=>{document.getElementById("successArea").style.display="none";resetForm();},1800);
 }
-
 function resetForm(){
   ["inp-name","inp-phone","inp-memo"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("inp-date").value=new Date().toISOString().slice(0,10);
@@ -516,8 +514,9 @@ function resetForm(){
   goStep(1);
 }
 
+// ── 탭 전환 ──────────────────────────────────────────────────────────
 function switchTab(tab,el){
-  if(tab==="stats" && !statsUnlocked){
+  if(tab==="stats"&&!statsUnlocked){
     pendingStatsEl=el;
     document.getElementById("pwInput").value="";
     document.getElementById("pwModal").classList.add("active");
@@ -526,22 +525,17 @@ function switchTab(tab,el){
   }
   doSwitchTab(tab,el);
 }
-
 function closePwModal(){document.getElementById("pwModal").classList.remove("active");}
-
 function checkPassword(){
   const val=document.getElementById("pwInput").value;
   if(val==="0000"){
-    statsUnlocked=true;
-    closePwModal();
-    doSwitchTab("stats",pendingStatsEl);
+    statsUnlocked=true;closePwModal();doSwitchTab("stats",pendingStatsEl);
   }else{
     showToast("비밀번호가 올바르지 않습니다");
     document.getElementById("pwInput").value="";
     document.getElementById("pwInput").focus();
   }
 }
-
 function doSwitchTab(tab,el){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -550,6 +544,7 @@ function doSwitchTab(tab,el){
   if(tab==="stats")renderStats();
 }
 
+// ── 목록 ──────────────────────────────────────────────────────────────
 function renderList(){
   const q=document.getElementById("searchInput").value.trim();
   const filtered=records.filter(r=>r.name.includes(q)||(r.phone||"").includes(q));
@@ -571,13 +566,13 @@ function renderList(){
   }).join("");
 }
 
+// ── 통계 ──────────────────────────────────────────────────────────────
 function setFilter(f,el){
   currentFilter=f;
   document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");
   document.getElementById("customDateRow").style.display=f==="custom"?"flex":"none";
   if(f!=="custom")renderStats();
 }
-
 function getFiltered(){
   const today=new Date().toISOString().slice(0,10),now=new Date();
   const base=records.filter(r=>r.type!=="inquiry");
@@ -587,103 +582,50 @@ function getFiltered(){
   if(currentFilter==="custom"){const fr=document.getElementById("dateFrom").value,to=document.getElementById("dateTo").value;return base.filter(r=>(!fr||r.date>=fr)&&(!to||r.date<=to));}
   return base;
 }
-
 function getWeekRange(offset){
-  const now=new Date();
-  const day=now.getDay();
-  const mon=new Date(now);
+  const now=new Date(),day=now.getDay(),mon=new Date(now);
   mon.setDate(now.getDate()-(day===0?6:day-1)+offset*7);
-  const sun=new Date(mon);
-  sun.setDate(mon.getDate()+6);
-  return {start:mon.toISOString().slice(0,10), end:sun.toISOString().slice(0,10)};
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{start:mon.toISOString().slice(0,10),end:sun.toISOString().slice(0,10)};
 }
-
 function renderFeedback(){
   const base=records.filter(r=>r.type!=="inquiry");
-  const thisW=getWeekRange(0), lastW=getWeekRange(-1);
-  const thisCount=base.filter(r=>r.date>=thisW.start && r.date<=thisW.end).length;
-  const lastCount=base.filter(r=>r.date>=lastW.start && r.date<=lastW.end).length;
+  const thisW=getWeekRange(0),lastW=getWeekRange(-1);
+  const thisCount=base.filter(r=>r.date>=thisW.start&&r.date<=thisW.end).length;
+  const lastCount=base.filter(r=>r.date>=lastW.start&&r.date<=lastW.end).length;
   const diff=thisCount-lastCount;
-  const card=document.getElementById("feedbackCard");
-  const icon=document.getElementById("feedbackIcon");
-  const text=document.getElementById("feedbackText");
-  let pct;
-  if(lastCount===0){pct=thisCount===0?0:100;}
-  else{pct=Math.round(Math.abs(diff)/lastCount*100);}
+  const card=document.getElementById("feedbackCard"),icon=document.getElementById("feedbackIcon"),text=document.getElementById("feedbackText");
+  let pct;if(lastCount===0){pct=thisCount===0?0:100;}else{pct=Math.round(Math.abs(diff)/lastCount*100);}
   card.classList.remove("up","down","same");
   if(diff>0){card.classList.add("up");icon.textContent="📈";text.textContent=`전 주 대비 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;}
   else if(diff<0){card.classList.add("down");icon.textContent="📉";text.textContent=`전 주 대비 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;}
   else{card.classList.add("same");icon.textContent="➖";text.textContent=`전 주 대비 방문자 수가 동일합니다 (${thisCount}명)`;}
 }
-
 function renderPie(visits){
   const total=visits.length;
-  const counts={
-    offline:visits.filter(r=>r.sourceCat==="offline").length,
-    online:visits.filter(r=>r.sourceCat==="online").length,
-    other:visits.filter(r=>r.sourceCat==="other").length
-  };
+  const counts={offline:visits.filter(r=>r.sourceCat==="offline").length,online:visits.filter(r=>r.sourceCat==="online").length,other:visits.filter(r=>r.sourceCat==="other").length};
   const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
   const labels={offline:"오프라인",online:"온라인",other:"기타"};
-  const pieEl=document.getElementById("pieChart");
-  const legendEl=document.getElementById("pieLegend");
-
-  if(total===0){
-    pieEl.style.background="#f1f5f9";
-    legendEl.innerHTML=`<div style="color:var(--text-muted);font-size:12px">데이터가 없습니다</div>`;
-    return;
-  }
-
-  let acc=0;
-  const segments=[];
-  ["offline","online","other"].forEach(cat=>{
-    const pct=counts[cat]/total*100;
-    segments.push(`${colors[cat]} ${acc}% ${acc+pct}%`);
-    acc+=pct;
-  });
+  const pieEl=document.getElementById("pieChart"),legendEl=document.getElementById("pieLegend");
+  if(total===0){pieEl.style.background="#f1f5f9";legendEl.innerHTML=`<div style="color:var(--text-muted);font-size:12px">데이터가 없습니다</div>`;return;}
+  let acc=0;const segments=[];
+  ["offline","online","other"].forEach(cat=>{const pct=counts[cat]/total*100;segments.push(`${colors[cat]} ${acc}% ${acc+pct}%`);acc+=pct;});
   pieEl.style.background=`conic-gradient(${segments.join(",")})`;
-
-  legendEl.innerHTML=["offline","online","other"].map(cat=>{
-    const pct=Math.round(counts[cat]/total*100);
-    return `<div class="pie-legend-item"><span class="pie-dot" style="background:${colors[cat]}"></span><span class="pie-legend-label">${labels[cat]}</span><span class="pie-legend-value">${counts[cat]}건 (${pct}%)</span></div>`;
-  }).join("");
+  legendEl.innerHTML=["offline","online","other"].map(cat=>{const pct=Math.round(counts[cat]/total*100);return`<div class="pie-legend-item"><span class="pie-dot" style="background:${colors[cat]}"></span><span class="pie-legend-label">${labels[cat]}</span><span class="pie-legend-value">${counts[cat]}건 (${pct}%)</span></div>`;}).join("");
 }
-
-function renderCatPie(pieId, legendId, stats, color){
+function renderCatPie(pieId,legendId,stats,color){
   const total=stats.reduce((s,i)=>s+i.count,0);
-  const pieEl=document.getElementById(pieId);
-  const legendEl=document.getElementById(legendId);
-  if(total===0){
-    pieEl.style.background="#f1f5f9";
-    legendEl.innerHTML="";
-    return;
-  }
-  // 색상 팔레트 (항목별로 명도 변형)
-  const palette=stats.map((_,i)=>{
-    const alpha=1-i*(0.6/Math.max(stats.length-1,1));
-    return color+(Math.round(alpha*255).toString(16).padStart(2,"0"));
-  });
-  // conic-gradient
-  let acc=0;
-  const segs=stats.map((s,i)=>{
-    const pct=s.count/total*100;
-    const seg=`${palette[i]} ${acc}% ${acc+pct}%`;
-    acc+=pct;
-    return seg;
-  });
+  const pieEl=document.getElementById(pieId),legendEl=document.getElementById(legendId);
+  if(total===0){pieEl.style.background="#f1f5f9";legendEl.innerHTML="";return;}
+  const palette=stats.map((_,i)=>{const alpha=1-i*(0.6/Math.max(stats.length-1,1));return color+(Math.round(alpha*255).toString(16).padStart(2,"0"));});
+  let acc=0;const segs=stats.map((s,i)=>{const pct=s.count/total*100;const seg=`${palette[i]} ${acc}% ${acc+pct}%`;acc+=pct;return seg;});
   pieEl.style.background=`conic-gradient(${segs.join(",")})`;
-  // 범례 (0건 제외)
-  legendEl.innerHTML=stats.filter(s=>s.count>0).map((s,i)=>{
-    const pct=Math.round(s.count/total*100);
-    return `<div class="cat-pie-item"><span class="cat-pie-dot" style="background:${palette[i]}"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.label}</span><span class="cat-pie-pct">${pct}%</span></div>`;
-  }).join("");
+  legendEl.innerHTML=stats.filter(s=>s.count>0).map((s,i)=>{const pct=Math.round(s.count/total*100);return`<div class="cat-pie-item"><span class="cat-pie-dot" style="background:${palette[i]}"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.label}</span><span class="cat-pie-pct">${pct}%</span></div>`;}).join("");
 }
-
 function renderStats(){
   const filtered=getFiltered();
   document.getElementById("statTotal").textContent=filtered.length;
-  renderFeedback();
-  renderPie(filtered);
+  renderFeedback();renderPie(filtered);
   const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
   [{elId:"chart-offline",arr:VISIT_OFFLINE,cat:"offline"},{elId:"chart-online",arr:VISIT_ONLINE,cat:"online"},{elId:"chart-other",arr:VISIT_OTHER,cat:"other"}]
   .forEach(({elId,arr,cat})=>{
@@ -692,70 +634,39 @@ function renderStats(){
     document.getElementById(elId).innerHTML=stats.map(s=>`<div class="bar-row"><div class="bar-meta"><span class="bar-label">${s.label}</span><span class="bar-count" style="color:${colors[cat]}">${s.count}건</span></div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/max)*100}%;background:${colors[cat]}"></div></div></div>`).join("");
     renderCatPie(`pie-${cat}`,`legend-${cat}`,stats,colors[cat]);
   });
-
-  renderWeekTable(filtered);
-  renderDayTable(filtered);
+  renderWeekTable(filtered);renderDayTable(filtered);
 }
-
-function getWeekKey(d){
-  const dt=new Date(d);
-  const y=dt.getFullYear(), m=dt.getMonth()+1, day=dt.getDate();
-  const w=Math.ceil(day/7);
-  const key=`${y}${String(m).padStart(2,"0")}${w}`;
-  const label=`${y}년 ${m}월 ${w}주차`;
-  return {key,label};
-}
-
+function getWeekKey(d){const dt=new Date(d),y=dt.getFullYear(),m=dt.getMonth()+1,day=dt.getDate(),w=Math.ceil(day/7);return{key:`${y}${String(m).padStart(2,"0")}${w}`,label:`${y}년 ${m}월 ${w}주차`};}
 function renderWeekTable(filtered){
   const map={};
-  filtered.forEach(r=>{
-    if(!r.date)return;
-    const {key,label}=getWeekKey(r.date);
-    if(!map[key])map[key]={label,total:0,offline:0,online:0,other:0};
-    map[key].total++;
-    map[key][r.sourceCat||"other"]++;
-  });
+  filtered.forEach(r=>{if(!r.date)return;const{key,label}=getWeekKey(r.date);if(!map[key])map[key]={label,total:0,offline:0,online:0,other:0};map[key].total++;map[key][r.sourceCat||"other"]++;});
   const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
   if(!keys.length){document.getElementById("weekTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
-  document.getElementById("weekTable").innerHTML=`<table class="data-table">
-    <tr><th>기간</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>
-    ${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${map[k].label}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}
-  </table>`;
+  document.getElementById("weekTable").innerHTML=`<table class="data-table"><tr><th>기간</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${map[k].label}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}</table>`;
 }
-
 function renderDayTable(filtered){
   const map={};
-  filtered.forEach(r=>{
-    if(!r.date)return;
-    if(!map[r.date])map[r.date]={total:0,offline:0,online:0,other:0};
-    map[r.date].total++;
-    map[r.date][r.sourceCat||"other"]++;
-  });
+  filtered.forEach(r=>{if(!r.date)return;if(!map[r.date])map[r.date]={total:0,offline:0,online:0,other:0};map[r.date].total++;map[r.date][r.sourceCat||"other"]++;});
   const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
   if(!keys.length){document.getElementById("dayTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
-  document.getElementById("dayTable").innerHTML=`<table class="data-table">
-    <tr><th>날짜</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>
-    ${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}
-  </table>`;
+  document.getElementById("dayTable").innerHTML=`<table class="data-table"><tr><th>날짜</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}</table>`;
 }
 
+// ── 삭제 / CSV / 저장 ────────────────────────────────────────────────
 function deleteRecord(id){
   const rec=records.find(r=>r.id===id);
   if(!confirm("이 기록을 삭제할까요?\n(구글 시트에서도 함께 삭제됩니다)"))return;
-  records=records.filter(r=>r.id!==id);
-  save();renderList();showToast("삭제되었습니다");
+  records=records.filter(r=>r.id!==id);save();renderList();showToast("삭제되었습니다");
   if(rec)syncDeleteToSheet(rec);
 }
-
 function exportCSV(){
   const h=["날짜","시간","이름","연락처","분류","경로","검색어","지인이름","담당자","메모"];
   const rows=records.map(r=>[r.date,r.visitTime||"",r.name,r.phone,r.sourceCat||"",r.sourceLabel||"",r.keyword||"",r.refname||"",r.staff||"",r.memo||""]);
   const csv=[h,...rows].map(row=>row.map(v=>`"${(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));
-  a.download=`고객기록_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast("CSV 저장 완료!");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"}));
+  a.download=`고객기록_${BRANCH}_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast("CSV 저장 완료!");
 }
-
-function save(){localStorage.setItem("gym_v5",JSON.stringify(records));updateTotal();}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));updateTotal();}
 function updateTotal(){document.getElementById("totalCount").textContent=`총 ${records.length}건 기록`;}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2200);}
 </script>
