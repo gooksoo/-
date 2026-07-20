@@ -340,7 +340,6 @@ if (!BRANCH) {
 } else {
   document.getElementById('appRoot').style.display = 'block';
   document.getElementById('branchBadge').textContent = BRANCH;
-  init();
 }
 
 function init() {
@@ -669,6 +668,9 @@ function exportCSV(){
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));updateTotal();}
 function updateTotal(){document.getElementById("totalCount").textContent=`총 ${records.length}건 기록`;}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2200);}
+
+// 모든 변수/함수 선언 후 init 실행
+if (BRANCH) init();
 </script>
 </body>
 </html>
