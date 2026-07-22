@@ -614,7 +614,7 @@ function renderList(){
     return `<div class="record-card">
     <div class="record-top">
     <div><span class="record-name">${r.name}</span>${r.phone?`<span class="record-phone">${r.phone}</span>`:""}</div>
-    <div class="record-actions"><span class="record-date">${r.date||""}</span><button class="edit-btn" onclick="editRecord(${r.id})">✎ 수정</button><button class="del-btn" onclick="deleteRecord(${r.id})">✕ 삭제</button></div>
+    <div class="record-actions"><span class="record-date">${r.date||""}</span><button class="edit-btn" onclick="editRecord('${r.id}')">✎ 수정</button><button class="del-btn" onclick="deleteRecord('${r.id}')">✕ 삭제</button></div>
     </div>
     <div class="badge-row">${sb}${kb}${rb}${stb}</div>
     ${r.memo?`<div class="record-note">${r.memo}</div>`:""}
@@ -634,8 +634,8 @@ function closeConfirmModal(){
 function confirmDelete(){
   const id=deleteTargetId;
   if(id==null)return;
-  const rec=records.find(r=>r.id===id);
-  records=records.filter(r=>r.id!==id);save();renderList();showToast("삭제되었습니다");
+  const rec=records.find(r=>String(r.id)===String(id));
+  records=records.filter(r=>String(r.id)!==String(id));save();renderList();showToast("삭제되었습니다");
   closeConfirmModal();
   if(rec)syncDeleteToSheet(rec);
 }
@@ -656,7 +656,7 @@ function onEditSourceChange(){
   else{wrap.style.display="none";}
 }
 function editRecord(id){
-  const rec=records.find(r=>r.id===id);
+  const rec=records.find(r=>String(r.id)===String(id));
   if(!rec)return;
   editTargetId=id;
   document.getElementById("edit-name").value=rec.name||"";
@@ -677,7 +677,7 @@ function closeEditModal(){
   editTargetId=null;
 }
 function saveEdit(){
-  const rec=records.find(r=>r.id===editTargetId);
+  const rec=records.find(r=>String(r.id)===String(editTargetId));
   if(!rec)return;
   const name=document.getElementById("edit-name").value.trim();
   if(!name){showToast("이름을 입력해주세요");return;}
