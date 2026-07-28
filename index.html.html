@@ -263,6 +263,39 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <div class="card">
+<div class="card-title">등록 현황</div>
+<div class="pie-wrap">
+<div class="pie-chart" id="regPieChart"></div>
+<div class="pie-legend" id="regPieLegend"></div>
+</div>
+</div>
+
+<div class="card total-stat-card">
+<div class="card-title" style="margin-bottom:14px">매출 통계</div>
+<div class="summary-row">
+<div class="summary-left">
+<div class="total-stat-value" id="statRevenue" style="font-size:26px">0원</div>
+<div class="total-stat-label">총 매출(회원권+PT)</div>
+</div>
+<div class="summary-divider"></div>
+<div class="summary-left">
+<div class="total-stat-value" id="statMembership" style="font-size:20px;color:#059669">0원</div>
+<div class="total-stat-label">회원권</div>
+</div>
+<div class="summary-divider"></div>
+<div class="summary-left">
+<div class="total-stat-value" id="statPt" style="font-size:20px;color:#7c3aed">0원</div>
+<div class="total-stat-label">PT</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">일별 매출</div>
+<div style="overflow-x:auto" id="revenueTable"></div>
+</div>
+
+<div class="card">
 <div class="card-title">방문 경로 비율</div>
 <div class="pie-wrap">
 <div class="pie-chart" id="pieChart"></div>
@@ -768,7 +801,7 @@ function renderCatPie(pieId,legendId,stats,color){
 function renderStats(){
   const filtered=getFiltered();
   document.getElementById("statTotal").textContent=filtered.length;
-  renderFeedback();renderPie(filtered);
+  renderFeedback();renderPie(filtered);renderRegPie(filtered);renderRevenue(filtered);
   const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
   [{elId:"chart-offline",arr:VISIT_OFFLINE,cat:"offline"},{elId:"chart-online",arr:VISIT_ONLINE,cat:"online"},{elId:"chart-other",arr:VISIT_OTHER,cat:"other"}]
   .forEach(({elId,arr,cat})=>{
@@ -778,6 +811,34 @@ function renderStats(){
     renderCatPie(`pie-${cat}`,`legend-${cat}`,stats,colors[cat]);
   });
   renderWeekTable(filtered);renderDayTable(filtered);
+}
+function renderRegPie(visits){
+  const total=visits.length;
+  const regCount=visits.filter(r=>r.isRegistered).length;
+  const unregCount=total-regCount;
+  const pieEl=document.getElementById("regPieChart"),legendEl=document.getElementById("regPieLegend");
+  if(total===0){pieEl.style.background="#f1f5f9";legendEl.innerHTML=`<div style="color:var(--text-muted);font-size:12px">데이터가 없습니다</div>`;return;}
+  const regPct=regCount/total*100;
+  pieEl.style.background=`conic-gradient(#059669 0% ${regPct}%, #ef4444 ${regPct}% 100%)`;
+  const rate=Math.round(regPct);
+  legendEl.innerHTML=`
+  <div class="pie-legend-item"><span class="pie-dot" style="background:#059669"></span><span class="pie-legend-label">등록</span><span class="pie-legend-value">${regCount}건 (${rate}%)</span></div>
+  <div class="pie-legend-item"><span class="pie-dot" style="background:#ef4444"></span><span class="pie-legend-label">미등록</span><span class="pie-legend-value">${unregCount}건 (${100-rate}%)</span></div>`;
+}
+function fmtWon(n){return (n||0).toLocaleString("ko-KR")+"원";}
+function renderRevenue(visits){
+  const totalRevenue=visits.reduce((s,r)=>s+(r.revenue||0),0);
+  const totalMembership=visits.reduce((s,r)=>s+(r.membershipFee||0),0);
+  const totalPt=visits.reduce((s,r)=>s+(r.ptFee||0),0);
+  document.getElementById("statRevenue").textContent=fmtWon(totalRevenue);
+  document.getElementById("statMembership").textContent=fmtWon(totalMembership);
+  document.getElementById("statPt").textContent=fmtWon(totalPt);
+
+  const map={};
+  visits.forEach(r=>{if(!r.date)return;if(!map[r.date])map[r.date]={membership:0,pt:0};map[r.date].membership+=r.membershipFee||0;map[r.date].pt+=r.ptFee||0;});
+  const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
+  if(!keys.length){document.getElementById("revenueTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
+  document.getElementById("revenueTable").innerHTML=`<table class="data-table"><tr><th>날짜</th><th>회원권</th><th>PT</th><th>합계</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td style="color:#059669">${fmtWon(map[k].membership)}</td><td style="color:#7c3aed">${fmtWon(map[k].pt)}</td><td><strong>${fmtWon(map[k].membership+map[k].pt)}</strong></td></tr>`).join("")}</table>`;
 }
 function getWeekKey(d){const dt=new Date(d),y=dt.getFullYear(),m=dt.getMonth()+1,day=dt.getDate(),w=Math.ceil(day/7);return{key:`${y}${String(m).padStart(2,"0")}${w}`,label:`${y}년 ${m}월 ${w}주차`};}
 function renderWeekTable(filtered){
