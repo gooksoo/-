@@ -191,6 +191,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="field"><label>이름 *</label><input type="text" id="inp-name" placeholder="고객 이름"></div>
 <div class="field"><label>연락처</label><input type="tel" id="inp-phone" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)"></div>
 <div class="field"><label>날짜</label><input type="date" id="inp-date"></div>
+<div class="field" style="margin-bottom:0">
+<label>체험예약 하셨나요?</label>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<button type="button" class="source-btn" id="trial-yes-btn" onclick="setTrialReserved(true)">예</button>
+<button type="button" class="source-btn" id="trial-no-btn" onclick="setTrialReserved(false)">아니요</button>
+</div>
+</div>
 </div>
 <button class="submit-btn" onclick="goStep2()">다음</button>
 </div>
@@ -246,27 +253,50 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <!-- STATS -->
 <div class="page" id="page-stats">
-<div class="card total-stat-card">
-<div class="summary-row">
-<div class="summary-left">
-<div class="total-stat-value" id="statTotal">0</div>
-<div class="total-stat-label">전체 방문</div>
-</div>
-<div class="summary-divider"></div>
-<div class="summary-feedback">
-<div class="feedback-inline" id="feedbackCard">
+<div class="feedback-inline" id="feedbackCard" style="margin-bottom:12px">
 <div class="feedback-icon" id="feedbackIcon">📊</div>
 <div class="feedback-text" id="feedbackText">분석 중...</div>
 </div>
+
+<div class="card">
+<div class="card-title">워크인 등록 현황</div>
+<div class="pie-wrap" style="padding:6px 0">
+<div class="pie-chart" id="regPieChart" style="position:relative">
+<span id="regPieCenter" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--text);z-index:1"></span>
+</div>
+<div class="pie-legend" id="regPieLegend"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:12px;border-top:1px solid var(--border);margin-top:4px">
+<div style="background:#f8faff;border-radius:10px;padding:10px;text-align:center">
+<div style="font-size:10px;color:var(--text-sub);font-weight:700;margin-bottom:2px">전체 방문자</div>
+<div style="font-size:17px;font-weight:900" id="regTotalVisitors">0명</div>
+</div>
+<div style="background:var(--primary-light);border-radius:10px;padding:10px;text-align:center">
+<div style="font-size:10px;color:var(--primary);font-weight:700;margin-bottom:2px">전체 등록률</div>
+<div style="font-size:17px;font-weight:900;color:var(--primary)" id="regTotalRate">0%</div>
 </div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-title">등록 현황</div>
-<div class="pie-wrap">
-<div class="pie-chart" id="regPieChart"></div>
-<div class="pie-legend" id="regPieLegend"></div>
+<div class="card-title">FC / PT 등록 현황</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="background:#f8faff;border-radius:10px;padding:10px">
+<div style="font-size:10px;color:var(--text-sub);font-weight:700;margin-bottom:4px">총 FC 등록자</div>
+<div style="font-size:15px;font-weight:800" id="fcCount">0명</div>
+</div>
+<div style="background:#f8faff;border-radius:10px;padding:10px">
+<div style="font-size:10px;color:var(--text-sub);font-weight:700;margin-bottom:4px">총 PT 등록자</div>
+<div style="font-size:15px;font-weight:800" id="ptCount">0명</div>
+</div>
+<div style="background:#f8faff;border-radius:10px;padding:10px">
+<div style="font-size:10px;color:var(--text-sub);font-weight:700;margin-bottom:4px">FC 평균 객단가</div>
+<div style="font-size:15px;font-weight:800" id="fcAvg">-</div>
+</div>
+<div style="background:#f8faff;border-radius:10px;padding:10px">
+<div style="font-size:10px;color:var(--text-sub);font-weight:700;margin-bottom:4px">PT 평균 객단가</div>
+<div style="font-size:15px;font-weight:800" id="ptAvg">-</div>
+</div>
 </div>
 </div>
 
@@ -293,6 +323,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="card">
 <div class="card-title">일별 매출</div>
 <div style="overflow-x:auto" id="revenueTable"></div>
+</div>
+
+<div class="card">
+<div class="card-title">체험예약 현황</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="background:#fdf4ff;border-radius:10px;padding:10px;text-align:center">
+<div style="font-size:10px;color:#7c3aed;font-weight:700;margin-bottom:2px">체험예약자</div>
+<div style="font-size:15px;font-weight:800" id="trialCount">0명</div>
+</div>
+<div style="background:#fdf4ff;border-radius:10px;padding:10px;text-align:center">
+<div style="font-size:10px;color:#7c3aed;font-weight:700;margin-bottom:2px">예약자 등록률</div>
+<div style="font-size:15px;font-weight:800" id="trialRate">0%</div>
+</div>
+</div>
 </div>
 
 <div class="card">
@@ -459,6 +503,12 @@ const VISIT_OTHER=[
 ];
 
 let selectedSource="",selectedCat="",selectedLabel="";
+let trialReserved=null;
+function setTrialReserved(val){
+  trialReserved=val;
+  document.getElementById("trial-yes-btn").className="source-btn"+(val===true?" sel-online":"");
+  document.getElementById("trial-no-btn").className="source-btn"+(val===false?" sel-other":"");
+}
 let selNeedsKeyword=false,selNeedsName=false;
 let sourceRendered=false;
 let currentFilter="all";
@@ -572,6 +622,8 @@ function submitForm(skipStaff){
   if(!selectedSource){showToast("경로를 선택해주세요");goStep(2);return;}
   if(selNeedsKeyword&&!document.getElementById("inp-keyword")?.value.trim()){showToast("검색어를 입력해주세요");goStep(3);return;}
   if(selNeedsName&&!document.getElementById("inp-refname")?.value.trim()){showToast("지인 성함을 입력해주세요");goStep(3);return;}
+  const memoBase=document.getElementById("inp-memo").value.trim();
+  const memoWithTrial=trialReserved===true?("체험예약⭕"+(memoBase?" "+memoBase:"")):memoBase;
   const record={
     id:Date.now(),
     name:document.getElementById("inp-name").value.trim(),
@@ -583,7 +635,7 @@ function submitForm(skipStaff){
     keyword:document.getElementById("inp-keyword")?.value.trim()||"",
     refname:document.getElementById("inp-refname")?.value.trim()||"",
     staff:staff,
-    memo:document.getElementById("inp-memo").value.trim(),
+    memo:memoWithTrial,
     createdAt:new Date().toLocaleString("ko-KR")
   };
   records.unshift(record);save();syncToSheet(record);
@@ -600,6 +652,9 @@ function resetForm(){
   document.getElementById("inp-staff").value="";
   selectedSource="";selectedCat="";selectedLabel="";
   selNeedsKeyword=false;selNeedsName=false;
+  trialReserved=null;
+  document.getElementById("trial-yes-btn").className="source-btn";
+  document.getElementById("trial-no-btn").className="source-btn";
   goStep(1);
 }
 
@@ -800,27 +855,57 @@ function renderCatPie(pieId,legendId,stats,color){
 }
 function renderStats(){
   const filtered=getFiltered();
-  document.getElementById("statTotal").textContent=filtered.length;
-  renderFeedback();renderPie(filtered);renderRegPie(filtered);renderRevenue(filtered);
+  renderFeedback();renderPie(filtered);renderRegPie(filtered);renderRevenue(filtered);renderFcPt(filtered);renderTrial(filtered);
   const colors={offline:"#059669",online:"#0284c7",other:"#7c3aed"};
   [{elId:"chart-offline",arr:VISIT_OFFLINE,cat:"offline"},{elId:"chart-online",arr:VISIT_ONLINE,cat:"online"},{elId:"chart-other",arr:VISIT_OTHER,cat:"other"}]
   .forEach(({elId,arr,cat})=>{
-    const stats=arr.map(s=>({label:s.label,count:filtered.filter(r=>r.source===s.id).length}));
+    const stats=arr.map(s=>{
+      const items=filtered.filter(r=>r.source===s.id);
+      const regCount=items.filter(r=>r.isRegistered).length;
+      const rate=items.length?Math.round(regCount/items.length*100):null;
+      return{label:s.label,count:items.length,rate};
+    });
     const max=Math.max(...stats.map(s=>s.count),1);
-    document.getElementById(elId).innerHTML=stats.map(s=>`<div class="bar-row"><div class="bar-meta"><span class="bar-label">${s.label}</span><span class="bar-count" style="color:${colors[cat]}">${s.count}건</span></div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/max)*100}%;background:${colors[cat]}"></div></div></div>`).join("");
+    document.getElementById(elId).innerHTML=stats.map(s=>`<div class="bar-row"><div class="bar-meta"><span class="bar-label">${s.label}</span><span class="bar-count" style="color:${colors[cat]}">${s.count}건${s.rate!==null?` · 등록률 ${s.rate}%`:""}</span></div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/max)*100}%;background:${colors[cat]}"></div></div></div>`).join("");
     renderCatPie(`pie-${cat}`,`legend-${cat}`,stats,colors[cat]);
   });
   renderWeekTable(filtered);renderDayTable(filtered);
+}
+function renderFcPt(visits){
+  const fc=visits.filter(r=>(r.membershipFee||0)>0);
+  const pt=visits.filter(r=>(r.ptFee||0)>0);
+  const fcAvg=fc.length?Math.round(fc.reduce((s,r)=>s+r.membershipFee,0)/fc.length):0;
+  const ptAvg=pt.length?Math.round(pt.reduce((s,r)=>s+r.ptFee,0)/pt.length):0;
+  document.getElementById("fcCount").textContent=fc.length+"명";
+  document.getElementById("ptCount").textContent=pt.length+"명";
+  document.getElementById("fcAvg").textContent=fc.length?fmtWon(fcAvg):"-";
+  document.getElementById("ptAvg").textContent=pt.length?fmtWon(ptAvg):"-";
+}
+function renderTrial(visits){
+  const trial=visits.filter(r=>r.memo&&r.memo.includes("체험예약⭕"));
+  const trialReg=trial.filter(r=>r.isRegistered).length;
+  const rate=trial.length?Math.round(trialReg/trial.length*100):0;
+  document.getElementById("trialCount").textContent=trial.length+"명";
+  document.getElementById("trialRate").textContent=rate+"%";
 }
 function renderRegPie(visits){
   const total=visits.length;
   const regCount=visits.filter(r=>r.isRegistered).length;
   const unregCount=total-regCount;
-  const pieEl=document.getElementById("regPieChart"),legendEl=document.getElementById("regPieLegend");
-  if(total===0){pieEl.style.background="#f1f5f9";legendEl.innerHTML=`<div style="color:var(--text-muted);font-size:12px">데이터가 없습니다</div>`;return;}
+  const pieEl=document.getElementById("regPieChart"),legendEl=document.getElementById("regPieLegend"),centerEl=document.getElementById("regPieCenter");
+  document.getElementById("regTotalVisitors").textContent=total+"명";
+  if(total===0){
+    pieEl.style.background="#f1f5f9";
+    legendEl.innerHTML=`<div style="color:var(--text-muted);font-size:12px">데이터가 없습니다</div>`;
+    centerEl.textContent="0명";
+    document.getElementById("regTotalRate").textContent="0%";
+    return;
+  }
   const regPct=regCount/total*100;
   pieEl.style.background=`conic-gradient(#059669 0% ${regPct}%, #ef4444 ${regPct}% 100%)`;
   const rate=Math.round(regPct);
+  centerEl.textContent=total+"명";
+  document.getElementById("regTotalRate").textContent=rate+"%";
   legendEl.innerHTML=`
   <div class="pie-legend-item"><span class="pie-dot" style="background:#059669"></span><span class="pie-legend-label">등록</span><span class="pie-legend-value">${regCount}건 (${rate}%)</span></div>
   <div class="pie-legend-item"><span class="pie-dot" style="background:#ef4444"></span><span class="pie-legend-label">미등록</span><span class="pie-legend-value">${unregCount}건 (${100-rate}%)</span></div>`;
