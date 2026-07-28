@@ -25,6 +25,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .card-question{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.4}
 .field{margin-bottom:10px}.field:last-child{margin-bottom:0}
 .field label{display:block;font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:5px}
+.field label .req-star{color:#ef4444;font-weight:900}
 .field input,.field textarea,.field select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--text);background:#fafbff;outline:none;transition:border-color .15s,box-shadow .15s}
 .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 .field input:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08);background:white}
@@ -143,6 +144,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .refresh-btn{width:100%;padding:13px;border:1.5px solid var(--primary);border-radius:12px;background:var(--primary-light);color:var(--primary);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:all .15s}
 .refresh-btn:active{background:var(--primary);color:white}
 .refresh-btn.loading{opacity:.6;pointer-events:none}
+.last-updated-label{text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:600}
 .error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px}
 .error-icon{font-size:52px;margin-bottom:16px}
 .error-title{font-size:18px;font-weight:900;color:#ef4444;margin-bottom:8px}
@@ -153,7 +155,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </head>
 <body>
 
-<!-- 지점 파라미터 없을 때 오류 화면 -->
 <div id="errorScreen" style="display:none">
 <div class="error-screen">
 <div class="error-icon">⚠️</div>
@@ -162,7 +163,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
-<!-- 정상 앱 화면 -->
 <div id="appRoot" style="display:none">
 <div class="header">
 <div class="header-inner">
@@ -183,7 +183,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <div class="content">
-<!-- FORM -->
 <div class="page active" id="page-form">
 <div class="step active" id="step1">
 <div class="card">
@@ -192,7 +191,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="field"><label>연락처</label><input type="tel" id="inp-phone" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)"></div>
 <div class="field"><label>날짜</label><input type="date" id="inp-date"></div>
 <div class="field" style="margin-bottom:0">
-<label>체험예약 하셨나요?</label>
+<label><span class="req-star">*</span>체험예약 하셨나요?</label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button type="button" class="source-btn" id="trial-yes-btn" onclick="setTrialReserved(true)">예</button>
 <button type="button" class="source-btn" id="trial-no-btn" onclick="setTrialReserved(false)">아니요</button>
@@ -242,7 +241,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
-<!-- LIST -->
 <div class="page" id="page-list">
 <div class="search-row">
 <input class="search-input" type="text" id="searchInput" placeholder="🔍 이름, 연락처 검색" oninput="renderList()">
@@ -251,7 +249,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div id="recordList"></div>
 </div>
 
-<!-- STATS -->
 <div class="page" id="page-stats">
 <div class="feedback-inline" id="feedbackCard" style="margin-bottom:12px">
 <div class="feedback-icon" id="feedbackIcon">📊</div>
@@ -404,12 +401,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <button class="refresh-btn" id="refreshBtn" onclick="syncFromSheet()">
 🔄 시트에서 최신 데이터 불러오기
 </button>
+<div class="last-updated-label" id="lastUpdatedLabel"></div>
 </div>
 
 </div>
-</div><!-- /appRoot -->
+</div>
 
-<!-- PASSWORD MODAL -->
 <div class="modal-overlay" id="pwModal">
 <div class="modal-box">
 <div class="modal-icon">🔒</div>
@@ -423,7 +420,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
-<!-- DELETE CONFIRM MODAL -->
 <div class="modal-overlay" id="confirmModal">
 <div class="modal-box">
 <div class="modal-icon">🗑️</div>
@@ -436,7 +432,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
-<!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
 <div class="modal-box edit-modal-box">
 <div class="modal-title">정보 수정</div>
@@ -457,7 +452,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
-// ── 지점 설정 ──────────────────────────────────────────────────────────
 const MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbx8MZDlOGUh6BvS-LVS1FdeDOmGr8zNnlgkcoQTt_sAoTDos0t8kGZWiCnzHjdH_wg/exec";
 const BRANCH = new URLSearchParams(window.location.search).get('branch') || '';
 const STORAGE_KEY = 'gym_v5_' + BRANCH;
@@ -476,7 +470,6 @@ function init() {
   loadStaffList();
 }
 
-// ── 데이터 ────────────────────────────────────────────────────────────
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let staffList = [];
 
@@ -522,13 +515,29 @@ let pendingStatsEl=null;
 let deleteTargetId=null;
 let editTargetId=null;
 
-// ── 직원 목록 로드 ────────────────────────────────────────────────────
+// 마스터 Code.gs가 응답에 lastUpdated 필드(ISO 문자열)를 내려주면
+// "등록 여부 마지막 업데이트 (7/28 18:42)" 형태로 자동 표시합니다.
+// 아직 서버에 이 필드가 없으면 조용히 아무것도 표시하지 않습니다.
+function updateLastUpdatedLabel(ts){
+  const el = document.getElementById("lastUpdatedLabel");
+  if(!el) return;
+  if(!ts){ el.textContent=""; return; }
+  try{
+    const d = new Date(ts);
+    if(isNaN(d.getTime())){ el.textContent=""; return; }
+    const m = d.getMonth()+1, day = d.getDate();
+    const hh = String(d.getHours()).padStart(2,"0"), mm = String(d.getMinutes()).padStart(2,"0");
+    el.textContent = `등록 여부 마지막 업데이트 (${m}/${day} ${hh}:${mm})`;
+  }catch(e){ el.textContent=""; }
+}
+
 async function loadStaffList(){
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH));
     const data=await res.json();
     staffList=data.staff||[];
     populateStaffSelect("inp-staff");
+    if(data.lastUpdated) updateLastUpdatedLabel(data.lastUpdated);
   }catch(e){console.warn("담당자 목록 로드 실패",e);}
 }
 
@@ -537,7 +546,6 @@ function populateStaffSelect(id){
   sel.innerHTML=`<option value="">담당자 선택</option>`+staffList.map(s=>`<option value="${s}">${s}</option>`).join("");
 }
 
-// ── 시트 동기화 ───────────────────────────────────────────────────────
 async function syncFromSheet(){
   const btn=document.getElementById("refreshBtn");
   btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";
@@ -552,6 +560,7 @@ async function syncFromSheet(){
       staffList=data.staff;
       populateStaffSelect("inp-staff");
     }
+    if(data.lastUpdated) updateLastUpdatedLabel(data.lastUpdated);
   }catch(e){
     showToast("❌ 불러오기 실패. 인터넷 연결을 확인해주세요");
     console.warn("시트 동기화 실패",e);
@@ -561,7 +570,6 @@ async function syncFromSheet(){
   }
 }
 
-// ── 시트 저장 ─────────────────────────────────────────────────────────
 async function syncToSheet(r){
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
@@ -581,7 +589,6 @@ async function syncUpdateToSheet(original,updated){
   }catch(e){console.warn("시트 수정 동기화 실패",e);}
 }
 
-// ── 폼 ────────────────────────────────────────────────────────────────
 function formatPhone(i){let v=i.value.replace(/\D/g,"");if(v.length<=3)i.value=v;else if(v.length<=7)i.value=v.slice(0,3)+"-"+v.slice(3);else i.value=v.slice(0,3)+"-"+v.slice(3,7)+"-"+v.slice(7,11);}
 function btnHTML(s,cat){
   const sub=(s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog")?`<span class="src-sub">(네이버)</span>`:"";
@@ -663,7 +670,6 @@ function resetForm(){
   goStep(1);
 }
 
-// ── 탭 전환 ──────────────────────────────────────────────────────────
 function switchTab(tab,el){
   if(tab==="stats"&&!statsUnlocked){
     pendingStatsEl=el;
@@ -693,7 +699,6 @@ function doSwitchTab(tab,el){
   if(tab==="stats")renderStats();
 }
 
-// ── 목록 ──────────────────────────────────────────────────────────────
 function renderList(){
   const q=document.getElementById("searchInput").value.trim();
   const filtered=records.filter(r=>r.name.includes(q)||(r.phone||"").includes(q));
@@ -715,7 +720,6 @@ function renderList(){
   }).join("");
 }
 
-// ── 삭제 (커스텀 모달) ──────────────────────────────────────────────
 function deleteRecord(id){
   deleteTargetId=id;
   document.getElementById("confirmModal").classList.add("active");
@@ -733,7 +737,6 @@ function confirmDelete(){
   if(rec)syncDeleteToSheet(rec);
 }
 
-// ── 수정 (커스텀 모달) ──────────────────────────────────────────────
 function buildSourceOptions(){
   const groups=[["오프라인",VISIT_OFFLINE],["온라인",VISIT_ONLINE],["기타",VISIT_OTHER]];
   const catIds=["offline","online","other"];
@@ -802,7 +805,6 @@ function saveEdit(){
   syncUpdateToSheet(original,updated);
 }
 
-// ── 통계 ──────────────────────────────────────────────────────────────
 function setFilter(f,el){
   currentFilter=f;
   document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");
@@ -959,7 +961,6 @@ function renderDayTable(filtered){
   document.getElementById("dayTable").innerHTML=`<table class="data-table"><tr><th>날짜</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}</table>`;
 }
 
-// ── CSV / 저장 ─────────────────────────────────────────────────────
 function exportCSV(){
   const h=["날짜","시간","이름","연락처","분류","경로","검색어","지인이름","담당자","메모"];
   const rows=records.map(r=>[r.date,r.visitTime||"",r.name,r.phone,r.sourceCat||"",r.sourceLabel||"",r.keyword||"",r.refname||"",r.staff||"",r.memo||""]);
