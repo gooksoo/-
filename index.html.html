@@ -80,9 +80,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .summary-divider{width:1px;height:60px;background:var(--border);flex-shrink:0}
 .summary-feedback{flex:1}
 .feedback-inline{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border)}
-.feedback-inline.up{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#6ee7b7}
-.feedback-inline.down{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#fca5a5}
-.feedback-inline.same{background:#f1f5f9;border-color:#cbd5e1}
+.feedback-inline.up{background:#ecfdf5;border-color:#6ee7b7}
+.feedback-inline.down{background:#fef2f2;border-color:#fca5a5}
+.feedback-inline.same{background:#eff6ff;border-color:#93c5fd}
 .feedback-icon{font-size:22px;flex-shrink:0}
 .feedback-text{font-size:12px;font-weight:700;line-height:1.5;color:var(--text)}
 .cat-section{margin-bottom:8px}
@@ -302,7 +302,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <div class="card total-stat-card">
 <div class="card-title" style="margin-bottom:14px">매출 통계</div>
-<div class="summary-row">
+<div class="summary-row" style="justify-content:center">
 <div class="summary-left">
 <div class="total-stat-value" id="statRevenue" style="font-size:26px">0원</div>
 <div class="total-stat-label">총 매출(회원권+PT)</div>
@@ -321,8 +321,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <div class="card">
-<div class="card-title">일별 매출</div>
-<div style="overflow-x:auto" id="revenueTable"></div>
+<div class="card-title" id="dailyRevenueTitle">당일 매출</div>
+<div style="overflow-x:auto" id="dailyRevenueTable"></div>
+</div>
+
+<div class="card">
+<div class="card-title" id="monthlyRevenueTitle">당월 매출</div>
+<div style="overflow-x:auto" id="monthlyRevenueTable"></div>
 </div>
 
 <div class="card">
@@ -919,11 +924,24 @@ function renderRevenue(visits){
   document.getElementById("statMembership").textContent=fmtWon(totalMembership);
   document.getElementById("statPt").textContent=fmtWon(totalPt);
 
-  const map={};
-  visits.forEach(r=>{if(!r.date)return;if(!map[r.date])map[r.date]={membership:0,pt:0};map[r.date].membership+=r.membershipFee||0;map[r.date].pt+=r.ptFee||0;});
-  const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
-  if(!keys.length){document.getElementById("revenueTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
-  document.getElementById("revenueTable").innerHTML=`<table class="data-table"><tr><th>날짜</th><th>회원권</th><th>PT</th><th>합계</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td style="color:#059669">${fmtWon(map[k].membership)}</td><td style="color:#7c3aed">${fmtWon(map[k].pt)}</td><td><strong>${fmtWon(map[k].membership+map[k].pt)}</strong></td></tr>`).join("")}</table>`;
+  const today=new Date().toISOString().slice(0,10);
+  const thisMonth=today.slice(0,7);
+  const allVisits=records.filter(r=>r.type!=="inquiry");
+
+  const todayVisits=allVisits.filter(r=>r.date===today);
+  const monthVisits=allVisits.filter(r=>r.date&&r.date.slice(0,7)===thisMonth);
+
+  const revenueRow=(list)=>{
+    const m=list.reduce((s,r)=>s+(r.membershipFee||0),0);
+    const p=list.reduce((s,r)=>s+(r.ptFee||0),0);
+    return`<table class="data-table"><tr><th>회원권</th><th>PT</th><th>합계</th></tr><tr><td style="color:#059669">${fmtWon(m)}</td><td style="color:#7c3aed">${fmtWon(p)}</td><td><strong>${fmtWon(m+p)}</strong></td></tr></table>`;
+  };
+
+  document.getElementById("dailyRevenueTitle").textContent=`당일 매출 (${today})`;
+  document.getElementById("dailyRevenueTable").innerHTML=revenueRow(todayVisits);
+
+  document.getElementById("monthlyRevenueTitle").textContent=`당월 매출 (${thisMonth.slice(0,4)}년 ${parseInt(thisMonth.slice(5,7))}월)`;
+  document.getElementById("monthlyRevenueTable").innerHTML=revenueRow(monthVisits);
 }
 function getWeekKey(d){const dt=new Date(d),y=dt.getFullYear(),m=dt.getMonth()+1,day=dt.getDate(),w=Math.ceil(day/7);return{key:`${y}${String(m).padStart(2,"0")}${w}`,label:`${y}년 ${m}월 ${w}주차`};}
 function renderWeekTable(filtered){
