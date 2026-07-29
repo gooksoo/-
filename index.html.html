@@ -2,8 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>고객 방문 관리</title>
+
+<!-- 아이폰: 홈 화면 추가 시 전체화면 앱처럼 실행 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="고객 방문 관리">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- 안드로이드: 홈 화면 추가 시 앱처럼 실행 -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="favicon.png">
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f5f6fa;--white:#fff;--primary:#2563eb;--primary-light:#eff6ff;--primary-mid:#bfdbfe;--online:#0284c7;--online-light:#e0f2fe;--offline:#059669;--offline-light:#d1fae5;--other:#7c3aed;--other-light:#ede9fe;--inquiry:#475569;--inquiry-light:#f1f5f9;--text:#0f172a;--text-sub:#475569;--text-muted:#94a3b8;--border:#e2e8f0;--shadow:0 1px 4px rgba(0,0,0,.06);--radius:14px}
@@ -25,7 +37,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .card-question{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.4}
 .field{margin-bottom:10px}.field:last-child{margin-bottom:0}
 .field label{display:block;font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:5px}
-.field label .req-star{color:#ef4444;font-weight:900}
 .field input,.field textarea,.field select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--text);background:#fafbff;outline:none;transition:border-color .15s,box-shadow .15s}
 .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 .field input:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08);background:white}
@@ -144,7 +155,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .refresh-btn{width:100%;padding:13px;border:1.5px solid var(--primary);border-radius:12px;background:var(--primary-light);color:var(--primary);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:all .15s}
 .refresh-btn:active{background:var(--primary);color:white}
 .refresh-btn.loading{opacity:.6;pointer-events:none}
-.last-updated-label{text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:600}
 .error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px}
 .error-icon{font-size:52px;margin-bottom:16px}
 .error-title{font-size:18px;font-weight:900;color:#ef4444;margin-bottom:8px}
@@ -155,6 +165,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </head>
 <body>
 
+<!-- 지점 파라미터 없을 때 오류 화면 -->
 <div id="errorScreen" style="display:none">
 <div class="error-screen">
 <div class="error-icon">⚠️</div>
@@ -163,15 +174,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
+<!-- 정상 앱 화면 -->
 <div id="appRoot" style="display:none">
 <div class="header">
 <div class="header-inner">
-<div class="header-top">
-<div class="logo">🏋️</div>
+<div class="header-top" style="justify-content:center;flex-direction:column;align-items:center;text-align:center">
+<div class="logo" style="margin-bottom:6px">🏋️</div>
 <div>
-<div class="header-title">고객 방문 관리</div>
+<div class="header-title" style="font-size:18px">방문 접수</div>
 <div class="branch-badge" id="branchBadge"></div>
-<div class="header-sub" id="totalCount">총 0건 기록</div>
 </div>
 </div>
 <div class="tabs">
@@ -183,6 +194,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <div class="content">
+<!-- FORM -->
 <div class="page active" id="page-form">
 <div class="step active" id="step1">
 <div class="card">
@@ -191,7 +203,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="field"><label>연락처</label><input type="tel" id="inp-phone" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)"></div>
 <div class="field"><label>날짜</label><input type="date" id="inp-date"></div>
 <div class="field" style="margin-bottom:0">
-<label style="color:#ef4444">*체험예약 하셨나요?</label>
+<label>체험예약 하셨나요?</label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button type="button" class="source-btn" id="trial-yes-btn" onclick="setTrialReserved(true)">예</button>
 <button type="button" class="source-btn" id="trial-no-btn" onclick="setTrialReserved(false)">아니요</button>
@@ -228,8 +240,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <select id="inp-staff"><option value="">담당자 선택</option></select>
 </div>
 </div>
-<button class="submit-btn" onclick="submitForm(false)">저장하기</button>
-<button class="skip-btn" onclick="submitForm(true)">건너뛰기 (담당자 없이 저장)</button>
+<label style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;margin-bottom:10px;font-size:12.5px;color:var(--text-sub);cursor:pointer">
+<input type="checkbox" id="inp-consent" style="width:17px;height:17px;flex-shrink:0;accent-color:var(--primary)">
+개인정보 수집·이용에 동의합니다. (상담·서비스 안내 목적, 필수)
+</label>
+<button class="submit-btn" onclick="submitForm(false)">접수하기</button>
+<button class="skip-btn" onclick="submitForm(true)">건너뛰기 (담당자 없이 접수)</button>
 </div>
 
 <div id="successArea" style="display:none">
@@ -241,6 +257,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
+<!-- LIST -->
 <div class="page" id="page-list">
 <div class="search-row">
 <input class="search-input" type="text" id="searchInput" placeholder="🔍 이름, 연락처 검색" oninput="renderList()">
@@ -249,6 +266,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div id="recordList"></div>
 </div>
 
+<!-- STATS -->
 <div class="page" id="page-stats">
 <div class="feedback-inline" id="feedbackCard" style="margin-bottom:12px">
 <div class="feedback-icon" id="feedbackIcon">📊</div>
@@ -401,12 +419,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <button class="refresh-btn" id="refreshBtn" onclick="syncFromSheet()">
 🔄 시트에서 최신 데이터 불러오기
 </button>
-<div class="last-updated-label" id="lastUpdatedLabel"></div>
 </div>
 
 </div>
-</div>
+</div><!-- /appRoot -->
 
+<!-- PASSWORD MODAL -->
 <div class="modal-overlay" id="pwModal">
 <div class="modal-box">
 <div class="modal-icon">🔒</div>
@@ -420,6 +438,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
+<!-- DELETE CONFIRM MODAL -->
 <div class="modal-overlay" id="confirmModal">
 <div class="modal-box">
 <div class="modal-icon">🗑️</div>
@@ -432,6 +451,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
+<!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
 <div class="modal-box edit-modal-box">
 <div class="modal-title">정보 수정</div>
@@ -452,6 +472,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
+// ── 지점 설정 ──────────────────────────────────────────────────────────
 const MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbx8MZDlOGUh6BvS-LVS1FdeDOmGr8zNnlgkcoQTt_sAoTDos0t8kGZWiCnzHjdH_wg/exec";
 const BRANCH = new URLSearchParams(window.location.search).get('branch') || '';
 const STORAGE_KEY = 'gym_v5_' + BRANCH;
@@ -461,7 +482,7 @@ if (!BRANCH) {
   document.getElementById('errorScreen').style.display = 'block';
 } else {
   document.getElementById('appRoot').style.display = 'block';
-  document.getElementById('branchBadge').textContent = BRANCH;
+  document.getElementById('branchBadge').textContent = '헬스보이짐&필라걸 ' + BRANCH;
 }
 
 function init() {
@@ -470,6 +491,7 @@ function init() {
   loadStaffList();
 }
 
+// ── 데이터 ────────────────────────────────────────────────────────────
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let staffList = [];
 
@@ -511,33 +533,18 @@ let selNeedsKeyword=false,selNeedsName=false;
 let sourceRendered=false;
 let currentFilter="all";
 let statsUnlocked=false;
+let pendingStatsTab=null;
 let pendingStatsEl=null;
 let deleteTargetId=null;
 let editTargetId=null;
 
-// 마스터 Code.gs가 응답에 lastUpdated 필드(ISO 문자열)를 내려주면
-// "등록 여부 마지막 업데이트 (7/28 18:42)" 형태로 자동 표시합니다.
-// 아직 서버에 이 필드가 없으면 조용히 아무것도 표시하지 않습니다.
-function updateLastUpdatedLabel(ts){
-  const el = document.getElementById("lastUpdatedLabel");
-  if(!el) return;
-  if(!ts){ el.textContent=""; return; }
-  try{
-    const d = new Date(ts);
-    if(isNaN(d.getTime())){ el.textContent=""; return; }
-    const m = d.getMonth()+1, day = d.getDate();
-    const hh = String(d.getHours()).padStart(2,"0"), mm = String(d.getMinutes()).padStart(2,"0");
-    el.textContent = `등록 여부 마지막 업데이트 (${m}/${day} ${hh}:${mm})`;
-  }catch(e){ el.textContent=""; }
-}
-
+// ── 직원 목록 로드 ────────────────────────────────────────────────────
 async function loadStaffList(){
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH));
     const data=await res.json();
     staffList=data.staff||[];
     populateStaffSelect("inp-staff");
-    if(data.lastUpdated) updateLastUpdatedLabel(data.lastUpdated);
   }catch(e){console.warn("담당자 목록 로드 실패",e);}
 }
 
@@ -546,6 +553,7 @@ function populateStaffSelect(id){
   sel.innerHTML=`<option value="">담당자 선택</option>`+staffList.map(s=>`<option value="${s}">${s}</option>`).join("");
 }
 
+// ── 시트 동기화 ───────────────────────────────────────────────────────
 async function syncFromSheet(){
   const btn=document.getElementById("refreshBtn");
   btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";
@@ -560,7 +568,6 @@ async function syncFromSheet(){
       staffList=data.staff;
       populateStaffSelect("inp-staff");
     }
-    if(data.lastUpdated) updateLastUpdatedLabel(data.lastUpdated);
   }catch(e){
     showToast("❌ 불러오기 실패. 인터넷 연결을 확인해주세요");
     console.warn("시트 동기화 실패",e);
@@ -570,6 +577,7 @@ async function syncFromSheet(){
   }
 }
 
+// ── 시트 저장 ─────────────────────────────────────────────────────────
 async function syncToSheet(r){
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
@@ -589,6 +597,7 @@ async function syncUpdateToSheet(original,updated){
   }catch(e){console.warn("시트 수정 동기화 실패",e);}
 }
 
+// ── 폼 ────────────────────────────────────────────────────────────────
 function formatPhone(i){let v=i.value.replace(/\D/g,"");if(v.length<=3)i.value=v;else if(v.length<=7)i.value=v.slice(0,3)+"-"+v.slice(3);else i.value=v.slice(0,3)+"-"+v.slice(3,7)+"-"+v.slice(7,11);}
 function btnHTML(s,cat){
   const sub=(s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog")?`<span class="src-sub">(네이버)</span>`:"";
@@ -598,7 +607,7 @@ function btnHTML(s,cat){
 function renderSourceStep(){
   const card=document.getElementById("sourceCard");
   card.innerHTML=`
-  <div class="card-question">어떻게 저희 센터를 알고 오셨나요?</div>
+  <div class="card-question">어떻게 알고 오셨나요?</div>
   <div class="source-columns">
   <div class="source-col"><div class="col-header offline">오프라인</div>${VISIT_OFFLINE.map(s=>btnHTML(s,"offline")).join("")}</div>
   <div class="source-col"><div class="col-header online">온라인</div>${VISIT_ONLINE.map(s=>btnHTML(s,"online")).join("")}</div>
@@ -629,6 +638,7 @@ function goStep4(){
   goStep(4);
 }
 function submitForm(skipStaff){
+  if(!document.getElementById("inp-consent").checked){showToast("개인정보 수집·이용에 동의해주세요");return;}
   const staff=skipStaff?"":document.getElementById("inp-staff").value;
   if(!skipStaff&&!staff){showToast("담당자를 선택해주세요");return;}
   if(!selectedSource){showToast("경로를 선택해주세요");goStep(2);return;}
@@ -667,11 +677,14 @@ function resetForm(){
   trialReserved=null;
   document.getElementById("trial-yes-btn").className="source-btn";
   document.getElementById("trial-no-btn").className="source-btn";
+  document.getElementById("inp-consent").checked=false;
   goStep(1);
 }
 
+// ── 탭 전환 ──────────────────────────────────────────────────────────
 function switchTab(tab,el){
-  if(tab==="stats"&&!statsUnlocked){
+  if((tab==="stats"||tab==="list")&&!statsUnlocked){
+    pendingStatsTab=tab;
     pendingStatsEl=el;
     document.getElementById("pwInput").value="";
     document.getElementById("pwModal").classList.add("active");
@@ -684,7 +697,7 @@ function closePwModal(){document.getElementById("pwModal").classList.remove("act
 function checkPassword(){
   const val=document.getElementById("pwInput").value;
   if(val==="0000"){
-    statsUnlocked=true;closePwModal();doSwitchTab("stats",pendingStatsEl);
+    statsUnlocked=true;closePwModal();doSwitchTab(pendingStatsTab,pendingStatsEl);
   }else{
     showToast("비밀번호가 올바르지 않습니다");
     document.getElementById("pwInput").value="";
@@ -699,6 +712,7 @@ function doSwitchTab(tab,el){
   if(tab==="stats")renderStats();
 }
 
+// ── 목록 ──────────────────────────────────────────────────────────────
 function renderList(){
   const q=document.getElementById("searchInput").value.trim();
   const filtered=records.filter(r=>r.name.includes(q)||(r.phone||"").includes(q));
@@ -720,6 +734,7 @@ function renderList(){
   }).join("");
 }
 
+// ── 삭제 (커스텀 모달) ──────────────────────────────────────────────
 function deleteRecord(id){
   deleteTargetId=id;
   document.getElementById("confirmModal").classList.add("active");
@@ -737,6 +752,7 @@ function confirmDelete(){
   if(rec)syncDeleteToSheet(rec);
 }
 
+// ── 수정 (커스텀 모달) ──────────────────────────────────────────────
 function buildSourceOptions(){
   const groups=[["오프라인",VISIT_OFFLINE],["온라인",VISIT_ONLINE],["기타",VISIT_OTHER]];
   const catIds=["offline","online","other"];
@@ -805,6 +821,7 @@ function saveEdit(){
   syncUpdateToSheet(original,updated);
 }
 
+// ── 통계 ──────────────────────────────────────────────────────────────
 function setFilter(f,el){
   currentFilter=f;
   document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");
@@ -828,16 +845,24 @@ function getWeekRange(offset){
 }
 function renderFeedback(){
   const base=records.filter(r=>r.type!=="inquiry");
-  const thisW=getWeekRange(0),lastW=getWeekRange(-1);
-  const thisCount=base.filter(r=>r.date>=thisW.start&&r.date<=thisW.end).length;
-  const lastCount=base.filter(r=>r.date>=lastW.start&&r.date<=lastW.end).length;
+  const now=new Date(),today=now.toISOString().slice(0,10);
+  const day=now.getDay(),mon=new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1));
+  const thisStart=mon.toISOString().slice(0,10);
+
+  const lastMon=new Date(mon);lastMon.setDate(mon.getDate()-7);
+  const lastSameDay=new Date(now);lastSameDay.setDate(now.getDate()-7);
+  const lastStart=lastMon.toISOString().slice(0,10),lastEnd=lastSameDay.toISOString().slice(0,10);
+
+  const thisCount=base.filter(r=>r.date>=thisStart&&r.date<=today).length;
+  const lastCount=base.filter(r=>r.date>=lastStart&&r.date<=lastEnd).length;
   const diff=thisCount-lastCount;
   const card=document.getElementById("feedbackCard"),icon=document.getElementById("feedbackIcon"),text=document.getElementById("feedbackText");
   let pct;if(lastCount===0){pct=thisCount===0?0:100;}else{pct=Math.round(Math.abs(diff)/lastCount*100);}
   card.classList.remove("up","down","same");
-  if(diff>0){card.classList.add("up");icon.textContent="📈";text.textContent=`전 주 대비 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;}
-  else if(diff<0){card.classList.add("down");icon.textContent="📉";text.textContent=`전 주 대비 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;}
-  else{card.classList.add("same");icon.textContent="➖";text.textContent=`전 주 대비 방문자 수가 동일합니다 (${thisCount}명)`;}
+  if(diff>0){card.classList.add("up");icon.textContent="📈";text.textContent=`전 주 동일 요일 대비 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;}
+  else if(diff<0){card.classList.add("down");icon.textContent="📉";text.textContent=`전 주 동일 요일 대비 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;}
+  else{card.classList.add("same");icon.textContent="➖";text.textContent=`전 주 동일 요일 대비 방문자 수가 동일합니다 (${thisCount}명)`;}
 }
 function renderPie(visits){
   const total=visits.length;
@@ -948,19 +973,20 @@ function renderRevenue(visits){
 function getWeekKey(d){const dt=new Date(d),y=dt.getFullYear(),m=dt.getMonth()+1,day=dt.getDate(),w=Math.ceil(day/7);return{key:`${y}${String(m).padStart(2,"0")}${w}`,label:`${y}년 ${m}월 ${w}주차`};}
 function renderWeekTable(filtered){
   const map={};
-  filtered.forEach(r=>{if(!r.date)return;const{key,label}=getWeekKey(r.date);if(!map[key])map[key]={label,total:0,offline:0,online:0,other:0};map[key].total++;map[key][r.sourceCat||"other"]++;});
+  filtered.forEach(r=>{if(!r.date)return;const{key,label}=getWeekKey(r.date);if(!map[key])map[key]={label,total:0,membership:0,pt:0};map[key].total++;map[key].membership+=r.membershipFee||0;map[key].pt+=r.ptFee||0;});
   const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
   if(!keys.length){document.getElementById("weekTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
-  document.getElementById("weekTable").innerHTML=`<table class="data-table"><tr><th>기간</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${map[k].label}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}</table>`;
+  document.getElementById("weekTable").innerHTML=`<table class="data-table"><tr><th>기간</th><th>전체(인원)</th><th>회원권 매출</th><th>PT 매출</th><th>합계</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${map[k].label}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${fmtWon(map[k].membership)}</td><td style="color:#7c3aed">${fmtWon(map[k].pt)}</td><td><strong>${fmtWon(map[k].membership+map[k].pt)}</strong></td></tr>`).join("")}</table>`;
 }
 function renderDayTable(filtered){
   const map={};
-  filtered.forEach(r=>{if(!r.date)return;if(!map[r.date])map[r.date]={total:0,offline:0,online:0,other:0};map[r.date].total++;map[r.date][r.sourceCat||"other"]++;});
+  filtered.forEach(r=>{if(!r.date)return;if(!map[r.date])map[r.date]={total:0,membership:0,pt:0};map[r.date].total++;map[r.date].membership+=r.membershipFee||0;map[r.date].pt+=r.ptFee||0;});
   const keys=Object.keys(map).sort((a,b)=>b.localeCompare(a));
   if(!keys.length){document.getElementById("dayTable").innerHTML=`<div class="empty" style="padding:20px 0"><div>데이터가 없습니다</div></div>`;return;}
-  document.getElementById("dayTable").innerHTML=`<table class="data-table"><tr><th>날짜</th><th>전체</th><th>오프라인</th><th>온라인</th><th>기타</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${map[k].offline||0}</td><td style="color:#0284c7">${map[k].online||0}</td><td style="color:#7c3aed">${map[k].other||0}</td></tr>`).join("")}</table>`;
+  document.getElementById("dayTable").innerHTML=`<table class="data-table"><tr><th>날짜</th><th>전체(인원)</th><th>회원권 매출</th><th>PT 매출</th><th>합계</th></tr>${keys.map(k=>`<tr><td style="text-align:left;font-weight:700;font-size:11px">${k}</td><td><strong>${map[k].total}</strong></td><td style="color:#059669">${fmtWon(map[k].membership)}</td><td style="color:#7c3aed">${fmtWon(map[k].pt)}</td><td><strong>${fmtWon(map[k].membership+map[k].pt)}</strong></td></tr>`).join("")}</table>`;
 }
 
+// ── CSV / 저장 ─────────────────────────────────────────────────────
 function exportCSV(){
   const h=["날짜","시간","이름","연락처","분류","경로","검색어","지인이름","담당자","메모"];
   const rows=records.map(r=>[r.date,r.visitTime||"",r.name,r.phone,r.sourceCat||"",r.sourceLabel||"",r.keyword||"",r.refname||"",r.staff||"",r.memo||""]);
@@ -969,7 +995,7 @@ function exportCSV(){
   a.download=`고객기록_${BRANCH}_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast("CSV 저장 완료!");
 }
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));updateTotal();}
-function updateTotal(){document.getElementById("totalCount").textContent=`총 ${records.length}건 기록`;}
+function updateTotal(){}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2200);}
 
 if (BRANCH) init();
