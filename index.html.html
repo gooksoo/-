@@ -179,7 +179,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="header">
 <div class="header-inner">
 <div class="header-top" style="justify-content:center;flex-direction:column;align-items:center;text-align:center">
-<div class="logo" style="margin-bottom:6px">🏋️</div>
+<img src="logo.png" alt="HEALTHBOYGYM" style="height:44px;width:auto;margin-bottom:8px">
 <div>
 <div class="header-title" style="font-size:18px">방문 접수</div>
 <div class="branch-badge" id="branchBadge"></div>
@@ -203,7 +203,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="field"><label>연락처</label><input type="tel" id="inp-phone" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)"></div>
 <div class="field"><label>날짜</label><input type="date" id="inp-date"></div>
 <div class="field" style="margin-bottom:0">
-<label>체험예약 하셨나요?</label>
+<label style="color:#ef4444">*체험예약 하셨나요?</label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button type="button" class="source-btn" id="trial-yes-btn" onclick="setTrialReserved(true)">예</button>
 <button type="button" class="source-btn" id="trial-no-btn" onclick="setTrialReserved(false)">아니요</button>
@@ -860,9 +860,9 @@ function renderFeedback(){
   const card=document.getElementById("feedbackCard"),icon=document.getElementById("feedbackIcon"),text=document.getElementById("feedbackText");
   let pct;if(lastCount===0){pct=thisCount===0?0:100;}else{pct=Math.round(Math.abs(diff)/lastCount*100);}
   card.classList.remove("up","down","same");
-  if(diff>0){card.classList.add("up");icon.textContent="📈";text.textContent=`전 주 동일 요일 대비 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;}
-  else if(diff<0){card.classList.add("down");icon.textContent="📉";text.textContent=`전 주 동일 요일 대비 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;}
-  else{card.classList.add("same");icon.textContent="➖";text.textContent=`전 주 동일 요일 대비 방문자 수가 동일합니다 (${thisCount}명)`;}
+  if(diff>0){card.classList.add("up");icon.textContent="📈";text.textContent=`전 주 대비 방문자 수가 ${diff}명(${pct}%) 상승했습니다`;}
+  else if(diff<0){card.classList.add("down");icon.textContent="📉";text.textContent=`전 주 대비 방문자 수가 ${Math.abs(diff)}명(${pct}%) 감소했습니다`;}
+  else{card.classList.add("same");icon.textContent="➖";text.textContent=`전 주 대비 방문자 수가 동일합니다 (${thisCount}명)`;}
 }
 function renderPie(visits){
   const total=visits.length;
