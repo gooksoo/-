@@ -31,6 +31,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tabs{display:flex}
 .tab{flex:1;padding:9px 8px;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;text-align:center}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.nav-select-wrap{padding:8px 0 12px}
+.nav-select{width:100%;padding:11px 14px;font-size:14px;font-weight:800;color:var(--primary);background:var(--primary-light);border:1.5px solid var(--primary-mid);border-radius:12px;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%232563eb' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer}
+.inquiry-status-badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.2px}
+.st-신규접수{background:#e0f2fe;color:#0284c7}
+.st-상담예약{background:#fef9c3;color:#a16207}
+.st-상담진행{background:#ede9fe;color:#7c3aed}
+.st-노쇼{background:#fee2e2;color:#dc2626}
+.st-보류{background:#f1f5f9;color:#475569}
+.st-미등록{background:#fee2e2;color:#dc2626}
+.st-등록완료{background:#d1fae5;color:#059669}
+.inquiry-filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
+.inquiry-filter-btn{flex-shrink:0;padding:6px 12px;font-size:12px;font-weight:700;border-radius:99px;border:1.5px solid var(--border);background:var(--white);color:var(--text-sub);cursor:pointer;white-space:nowrap}
+.inquiry-filter-btn.active{background:var(--primary);border-color:var(--primary);color:white}
+.inquiry-status-select{font-size:11px;font-weight:700;padding:5px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);color:var(--text);font-family:inherit}
 .content{max-width:680px;margin:0 auto;padding:16px 14px 60px}
 .card{background:var(--white);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
 .card-title{font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
@@ -185,10 +199,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="branch-badge" id="branchBadge"></div>
 </div>
 </div>
-<div class="tabs">
-<button class="tab active" onclick="switchTab('form',this)">✏️ 입력</button>
-<button class="tab" onclick="switchTab('list',this)">📋 목록</button>
-<button class="tab" onclick="switchTab('stats',this)">📊 통계</button>
+<div class="nav-select-wrap">
+<select id="navSelect" class="nav-select" onchange="switchTab(this.value)">
+<option value="form">✏️ 입력</option>
+<option value="list">📋 목록</option>
+<option value="stats">📊 통계</option>
+<option value="inquiry">💬 상담 운영</option>
+</select>
 </div>
 </div>
 </div>
@@ -264,6 +281,24 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <button class="csv-btn" onclick="exportCSV()">📥 CSV</button>
 </div>
 <div id="recordList"></div>
+</div>
+
+<!-- INQUIRY -->
+<div class="page" id="page-inquiry">
+<div class="search-row">
+<input class="search-input" type="text" id="inquirySearchInput" placeholder="🔍 이름, 연락처 검색" oninput="renderInquiryList()">
+</div>
+<div class="inquiry-filter-row" id="inquiryFilterRow">
+<button class="inquiry-filter-btn active" data-status="" onclick="setInquiryFilter('',this)">전체</button>
+<button class="inquiry-filter-btn" data-status="신규접수" onclick="setInquiryFilter('신규접수',this)">신규접수</button>
+<button class="inquiry-filter-btn" data-status="상담예약" onclick="setInquiryFilter('상담예약',this)">상담예약</button>
+<button class="inquiry-filter-btn" data-status="상담진행" onclick="setInquiryFilter('상담진행',this)">상담진행</button>
+<button class="inquiry-filter-btn" data-status="노쇼" onclick="setInquiryFilter('노쇼',this)">노쇼</button>
+<button class="inquiry-filter-btn" data-status="보류" onclick="setInquiryFilter('보류',this)">보류</button>
+<button class="inquiry-filter-btn" data-status="미등록" onclick="setInquiryFilter('미등록',this)">미등록</button>
+<button class="inquiry-filter-btn" data-status="등록완료" onclick="setInquiryFilter('등록완료',this)">등록완료</button>
+</div>
+<div id="inquiryList"></div>
 </div>
 
 <!-- STATS -->
@@ -537,6 +572,8 @@ let pendingStatsTab=null;
 let pendingStatsEl=null;
 let deleteTargetId=null;
 let editTargetId=null;
+let inquiries=[];
+let inquiryFilter="";
 
 // ── 직원 목록 로드 ────────────────────────────────────────────────────
 async function loadStaffList(){
@@ -682,34 +719,39 @@ function resetForm(){
 }
 
 // ── 탭 전환 ──────────────────────────────────────────────────────────
-function switchTab(tab,el){
-  if((tab==="stats"||tab==="list")&&!statsUnlocked){
+function switchTab(tab){
+  if((tab==="stats"||tab==="list"||tab==="inquiry")&&!statsUnlocked){
     pendingStatsTab=tab;
-    pendingStatsEl=el;
     document.getElementById("pwInput").value="";
     document.getElementById("pwModal").classList.add("active");
     setTimeout(()=>document.getElementById("pwInput").focus(),100);
+    document.getElementById("navSelect").value="form"; // 인증 전엔 화면 안 넘어가므로 셀렉트 원복
     return;
   }
-  doSwitchTab(tab,el);
+  doSwitchTab(tab);
 }
-function closePwModal(){document.getElementById("pwModal").classList.remove("active");}
+function closePwModal(){
+  document.getElementById("pwModal").classList.remove("active");
+  document.getElementById("navSelect").value="form";
+}
 function checkPassword(){
   const val=document.getElementById("pwInput").value;
   if(val==="0000"){
-    statsUnlocked=true;closePwModal();doSwitchTab(pendingStatsTab,pendingStatsEl);
+    statsUnlocked=true;closePwModal();doSwitchTab(pendingStatsTab);
+    document.getElementById("navSelect").value=pendingStatsTab;
   }else{
     showToast("비밀번호가 올바르지 않습니다");
     document.getElementById("pwInput").value="";
     document.getElementById("pwInput").focus();
   }
 }
-function doSwitchTab(tab,el){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+function doSwitchTab(tab){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  el.classList.add("active");document.getElementById("page-"+tab).classList.add("active");
+  document.getElementById("page-"+tab).classList.add("active");
+  document.getElementById("navSelect").value=tab;
   if(tab==="list")renderList();
   if(tab==="stats")renderStats();
+  if(tab==="inquiry")loadInquiries();
 }
 
 // ── 목록 ──────────────────────────────────────────────────────────────
@@ -732,6 +774,67 @@ function renderList(){
     ${r.memo?`<div class="record-note">${r.memo}</div>`:""}
     </div>`;
   }).join("");
+}
+
+// ── 상담 운영 (문의DB) ──────────────────────────────────────────────
+async function loadInquiries(){
+  const el=document.getElementById("inquiryList");
+  el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;
+  try{
+    const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getInquiries');
+    const data=await res.json();
+    if(data.result!=="ok"){el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>${data.message||"불러오기 실패"}</div></div>`;return;}
+    inquiries=data.inquiries||[];
+    renderInquiryList();
+  }catch(err){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>`;
+  }
+}
+function setInquiryFilter(status,el){
+  inquiryFilter=status;
+  document.querySelectorAll("#inquiryFilterRow .inquiry-filter-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderInquiryList();
+}
+const INQUIRY_STATUS_OPTIONS=["신규접수","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
+function renderInquiryList(){
+  const q=document.getElementById("inquirySearchInput").value.trim();
+  let filtered=inquiries.filter(r=>r.name.includes(q)||(r.phone||"").includes(q));
+  if(inquiryFilter)filtered=filtered.filter(r=>r.status===inquiryFilter);
+  const el=document.getElementById("inquiryList");
+  if(!filtered.length){el.innerHTML=`<div class="empty"><div class="empty-icon">💬</div><div>해당하는 상담 건이 없습니다</div></div>`;return;}
+  el.innerHTML=filtered.map(r=>{
+    const statusOptions=INQUIRY_STATUS_OPTIONS.map(s=>`<option value="${s}"${s===r.status?" selected":""}>${s}</option>`).join("");
+    const badgeClass=r.status?`st-${r.status}`:"";
+    return `<div class="record-card">
+    <div class="record-top">
+    <div><span class="record-name">${r.name}</span>${r.phone?`<span class="record-phone">${r.phone}</span>`:""}</div>
+    <div class="record-actions"><span class="record-date">${r.date||""}</span></div>
+    </div>
+    <div class="badge-row">
+    ${r.channel?`<span class="badge badge-other">${r.channel}</span>`:""}
+    ${r.staff?`<span class="badge badge-staff">담당: ${r.staff}</span>`:""}
+    <span class="inquiry-status-badge ${badgeClass}">${r.status||"미지정"}</span>
+    </div>
+    ${r.memo?`<div class="record-note">${r.memo}</div>`:""}
+    <div style="margin-top:8px;display:flex;justify-content:flex-end">
+    <select class="inquiry-status-select" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select>
+    </div>
+    </div>`;
+  }).join("");
+}
+async function changeInquiryStatus(rowIndex,newStatus){
+  // 기존 delete/update와 동일하게 no-cors로 전송 (결과 확인은 안 되지만 낙관적으로 화면 먼저 갱신)
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"updateInquiryStatus",branch:BRANCH,rowIndex:rowIndex,newStatus:newStatus})});
+    showToast(newStatus==="등록완료"?"상태 변경 완료! 방문자DB에 등록됩니다":"상태가 변경되었습니다");
+    const item=inquiries.find(r=>r.rowIndex===rowIndex);
+    if(item)item.status=newStatus;
+    renderInquiryList();
+  }catch(err){
+    showToast("변경 실패, 다시 시도해주세요");
+  }
 }
 
 // ── 삭제 (커스텀 모달) ──────────────────────────────────────────────
