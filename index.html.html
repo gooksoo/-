@@ -301,6 +301,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <!-- LIST -->
 <div class="page" id="page-list">
+<button class="refresh-btn" id="listRefreshBtn" onclick="syncFromSheet()">
+🔄 시트에서 최신 데이터 불러오기
+</button>
 <div class="search-row">
 <input class="search-input" type="text" id="searchInput" placeholder="🔍 이름, 연락처 검색" oninput="renderList()">
 <button class="csv-btn" onclick="exportCSV()">📥 CSV</button>
@@ -331,6 +334,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <!-- INQUIRY STATS -->
 <div class="page" id="page-inquirystats">
+<button class="refresh-btn" id="inquiryStatsRefreshBtn" onclick="loadInquiryStats(true)">
+🔄 시트에서 최신 데이터 불러오기
+</button>
 <div id="inquiryStatsContent"></div>
 </div>
 
@@ -625,13 +631,16 @@ function populateStaffSelect(id){
 
 // ── 시트 동기화 ───────────────────────────────────────────────────────
 async function syncFromSheet(){
-  const btn=document.getElementById("refreshBtn");
-  btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";
+  // 지금 눌린 버튼이 어느 페이지 것이든 그 버튼 자체를 로딩 상태로 표시
+  const btn=(event&&event.target&&event.target.closest(".refresh-btn"))||document.getElementById("refreshBtn");
+  if(btn){btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";}
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH));
     const data=await res.json();
     if(data.records && data.records.length>=0){
-      records=data.records;save();renderStats();
+      records=data.records;save();
+      renderStats();
+      renderList();
       showToast(`✅ 시트에서 ${records.length}건 불러왔어요!`);
     }
     if(data.staff){
@@ -642,8 +651,7 @@ async function syncFromSheet(){
     showToast("❌ 불러오기 실패. 인터넷 연결을 확인해주세요");
     console.warn("시트 동기화 실패",e);
   }finally{
-    btn.classList.remove("loading");
-    btn.innerHTML="🔄 시트에서 최신 데이터 불러오기";
+    if(btn){btn.classList.remove("loading");btn.innerHTML="🔄 시트에서 최신 데이터 불러오기";}
   }
 }
 
@@ -909,20 +917,25 @@ async function changeInquiryStatus(rowIndex,newStatus){
 // ── 문의자 통계 (문의→예약→방문→등록/미등록 퍼널 + 경로별) ────────────
 async function loadInquiryStats(forceRefresh){
   const el=document.getElementById("inquiryStatsContent");
+  const btn=document.getElementById("inquiryStatsRefreshBtn");
   // 이미 불러온 데이터가 있으면 그걸 재사용 (탭 전환할 때마다 매번 다시 안 불러옴 → 딜레이 감소)
   if(!forceRefresh && inquiries.length>0){
     renderInquiryStats(inquiries);
     return;
   }
-  el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;
+  if(btn){btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";}
+  else{el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;}
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getInquiries');
     const data=await res.json();
     if(data.result!=="ok"){el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>${data.message||"불러오기 실패"}</div></div>`;return;}
     inquiries=data.inquiries||[];
     renderInquiryStats(inquiries);
+    if(forceRefresh)showToast(`✅ 시트에서 ${inquiries.length}건 불러왔어요!`);
   }catch(err){
     el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>`;
+  }finally{
+    if(btn){btn.classList.remove("loading");btn.textContent="🔄 시트에서 최신 데이터 불러오기";}
   }
 }
 function renderInquiryStats(list){
