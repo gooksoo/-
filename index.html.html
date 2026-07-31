@@ -34,7 +34,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .nav-select-wrap{padding:8px 0 12px}
 .nav-select{width:100%;padding:11px 14px;font-size:14px;font-weight:800;color:var(--primary);background:var(--primary-light);border:1.5px solid var(--primary-mid);border-radius:12px;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%232563eb' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer}
 .inquiry-status-badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.2px}
-.st-신규접수{background:#e0f2fe;color:#0284c7}
+.st-문의{background:#e0f2fe;color:#0284c7}
 .st-상담예약{background:#fef9c3;color:#a16207}
 .st-상담진행{background:#ede9fe;color:#7c3aed}
 .st-노쇼{background:#fee2e2;color:#dc2626}
@@ -45,6 +45,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .inquiry-filter-btn{flex-shrink:0;padding:6px 12px;font-size:12px;font-weight:700;border-radius:99px;border:1.5px solid var(--border);background:var(--white);color:var(--text-sub);cursor:pointer;white-space:nowrap}
 .inquiry-filter-btn.active{background:var(--primary);border-color:var(--primary);color:white}
 .inquiry-status-select{font-size:11px;font-weight:700;padding:5px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);color:var(--text);font-family:inherit}
+.funnel-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.funnel-step{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:var(--white);border:1.5px solid var(--border)}
+.funnel-arrow{text-align:center;color:var(--text-muted);font-size:12px;padding:2px 0}
+.funnel-label{flex:1;font-size:13px;font-weight:700;color:var(--text-sub)}
+.funnel-count{font-size:20px;font-weight:800;color:var(--primary)}
+.funnel-rate{font-size:11px;font-weight:700;color:var(--text-muted);min-width:52px;text-align:right}
+.stat-section-title{font-size:13px;font-weight:800;color:var(--text-sub);margin:18px 0 8px}
+.channel-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:var(--white);border:1px solid var(--border);margin-bottom:6px}
+.channel-name{flex:1;font-size:12.5px;font-weight:700;color:var(--text)}
+.channel-bar-wrap{flex:2;height:8px;background:var(--primary-light);border-radius:99px;overflow:hidden}
+.channel-bar{height:100%;background:var(--primary);border-radius:99px}
+.channel-count{font-size:12px;font-weight:800;color:var(--text-sub);min-width:60px;text-align:right}
 .content{max-width:680px;margin:0 auto;padding:16px 14px 60px}
 .card{background:var(--white);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
 .card-title{font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
@@ -201,10 +213,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 <div class="nav-select-wrap">
 <select id="navSelect" class="nav-select" onchange="switchTab(this.value)">
-<option value="form">✏️ 입력</option>
-<option value="list">📋 목록</option>
-<option value="stats">📊 통계</option>
-<option value="inquiry">💬 상담 운영</option>
+<option value="form">✏️ 방문접수</option>
+<option value="list">📋 방문자 관리</option>
+<option value="stats">📊 방문자 통계</option>
+<option value="inquirystats">📈 문의자 통계</option>
+<option value="inquiry">💬 문의/예약자 관리</option>
 </select>
 </div>
 </div>
@@ -290,7 +303,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 <div class="inquiry-filter-row" id="inquiryFilterRow">
 <button class="inquiry-filter-btn active" data-status="" onclick="setInquiryFilter('',this)">전체</button>
-<button class="inquiry-filter-btn" data-status="신규접수" onclick="setInquiryFilter('신규접수',this)">신규접수</button>
+<button class="inquiry-filter-btn" data-status="문의" onclick="setInquiryFilter('문의',this)">문의</button>
 <button class="inquiry-filter-btn" data-status="상담예약" onclick="setInquiryFilter('상담예약',this)">상담예약</button>
 <button class="inquiry-filter-btn" data-status="상담진행" onclick="setInquiryFilter('상담진행',this)">상담진행</button>
 <button class="inquiry-filter-btn" data-status="노쇼" onclick="setInquiryFilter('노쇼',this)">노쇼</button>
@@ -299,6 +312,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <button class="inquiry-filter-btn" data-status="등록완료" onclick="setInquiryFilter('등록완료',this)">등록완료</button>
 </div>
 <div id="inquiryList"></div>
+</div>
+
+<!-- INQUIRY STATS -->
+<div class="page" id="page-inquirystats">
+<div id="inquiryStatsContent"></div>
 </div>
 
 <!-- STATS -->
@@ -720,7 +738,7 @@ function resetForm(){
 
 // ── 탭 전환 ──────────────────────────────────────────────────────────
 function switchTab(tab){
-  if((tab==="stats"||tab==="list"||tab==="inquiry")&&!statsUnlocked){
+  if((tab==="stats"||tab==="list"||tab==="inquiry"||tab==="inquirystats")&&!statsUnlocked){
     pendingStatsTab=tab;
     document.getElementById("pwInput").value="";
     document.getElementById("pwModal").classList.add("active");
@@ -752,6 +770,7 @@ function doSwitchTab(tab){
   if(tab==="list")renderList();
   if(tab==="stats")renderStats();
   if(tab==="inquiry")loadInquiries();
+  if(tab==="inquirystats")loadInquiryStats();
 }
 
 // ── 목록 ──────────────────────────────────────────────────────────────
@@ -796,7 +815,7 @@ function setInquiryFilter(status,el){
   el.classList.add("active");
   renderInquiryList();
 }
-const INQUIRY_STATUS_OPTIONS=["신규접수","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
+const INQUIRY_STATUS_OPTIONS=["문의","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
 function renderInquiryList(){
   const q=document.getElementById("inquirySearchInput").value.trim();
   let filtered=inquiries.filter(r=>r.name.includes(q)||(r.phone||"").includes(q));
@@ -835,6 +854,72 @@ async function changeInquiryStatus(rowIndex,newStatus){
   }catch(err){
     showToast("변경 실패, 다시 시도해주세요");
   }
+}
+
+// ── 문의자 통계 (문의→예약→방문→등록/미등록 퍼널 + 경로별) ────────────
+async function loadInquiryStats(){
+  const el=document.getElementById("inquiryStatsContent");
+  el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;
+  try{
+    const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getInquiries');
+    const data=await res.json();
+    if(data.result!=="ok"){el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>${data.message||"불러오기 실패"}</div></div>`;return;}
+    renderInquiryStats(data.inquiries||[]);
+  }catch(err){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>`;
+  }
+}
+function renderInquiryStats(list){
+  const el=document.getElementById("inquiryStatsContent");
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><div>문의 데이터가 없습니다</div></div>`;return;}
+
+  // 퍼널: 문의(전체) → 예약(상태가 문의 단계를 넘어선 건) → 방문(상담을 실제로 진행/완료/보류/등록/미등록까지 간 건, 노쇼 제외) → 등록완료
+  const total=list.length;
+  const reserved=list.filter(r=>r.status&&r.status!=="문의").length;
+  const visited=list.filter(r=>["상담진행","보류","등록완료","미등록"].includes(r.status)).length;
+  const registered=list.filter(r=>r.status==="등록완료").length;
+  const unregistered=list.filter(r=>r.status==="미등록").length;
+
+  const steps=[
+    {label:"문의",count:total,base:total},
+    {label:"예약",count:reserved,base:total},
+    {label:"방문",count:visited,base:total},
+    {label:"등록",count:registered,base:total},
+  ];
+
+  let funnelHtml=`<div class="funnel-wrap">`;
+  steps.forEach((s,idx)=>{
+    const rate=s.base>0?Math.round(s.count/s.base*100):0;
+    funnelHtml+=`<div class="funnel-step"><div class="funnel-label">${s.label}</div><div class="funnel-count">${s.count}건</div><div class="funnel-rate">${rate}%</div></div>`;
+    if(idx<steps.length-1)funnelHtml+=`<div class="funnel-arrow">↓</div>`;
+  });
+  funnelHtml+=`</div>`;
+  funnelHtml+=`<div class="funnel-step" style="background:var(--primary-light);border-color:var(--primary-mid)"><div class="funnel-label">미등록(이탈)</div><div class="funnel-count" style="color:#dc2626">${unregistered}건</div><div class="funnel-rate">${total>0?Math.round(unregistered/total*100):0}%</div></div>`;
+
+  // 경로별 통계 (문의 전체 건수 + 그중 등록완료 건수로 전환율 계산)
+  const channelMap={};
+  list.forEach(r=>{
+    const ch=r.channel||"미지정";
+    if(!channelMap[ch])channelMap[ch]={total:0,registered:0};
+    channelMap[ch].total++;
+    if(r.status==="등록완료")channelMap[ch].registered++;
+  });
+  const channels=Object.keys(channelMap).sort((a,b)=>channelMap[b].total-channelMap[a].total);
+  const maxTotal=Math.max(...channels.map(c=>channelMap[c].total),1);
+
+  let channelHtml=`<div class="stat-section-title">경로별 문의 현황</div>`;
+  channels.forEach(ch=>{
+    const c=channelMap[ch];
+    const rate=c.total>0?Math.round(c.registered/c.total*100):0;
+    const barPct=Math.round(c.total/maxTotal*100);
+    channelHtml+=`<div class="channel-row">
+      <div class="channel-name">${ch}</div>
+      <div class="channel-bar-wrap"><div class="channel-bar" style="width:${barPct}%"></div></div>
+      <div class="channel-count">${c.total}건 (등록 ${c.registered}·${rate}%)</div>
+    </div>`;
+  });
+
+  el.innerHTML=funnelHtml+channelHtml;
 }
 
 // ── 삭제 (커스텀 모달) ──────────────────────────────────────────────
