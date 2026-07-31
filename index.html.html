@@ -57,6 +57,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .channel-bar-wrap{flex:2;height:8px;background:var(--primary-light);border-radius:99px;overflow:hidden}
 .channel-bar{height:100%;background:var(--primary);border-radius:99px}
 .channel-count{font-size:12px;font-weight:800;color:var(--text-sub);min-width:60px;text-align:right}
+.inquiry-table{width:100%;border-collapse:collapse;font-size:12px;min-width:920px}
+.inquiry-table th{background:#1e293b;color:#fff;padding:9px 8px;font-weight:700;white-space:nowrap;position:sticky;top:0}
+.inquiry-table td{padding:8px;border-bottom:1px solid var(--border);white-space:nowrap;text-align:center}
+.inquiry-table tbody tr:hover{background:var(--primary-light)}
+.cell-strong{font-weight:800;color:var(--text)}
+.mini-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;background:#f1f5f9;color:var(--text-sub)}
+.mini-badge-blue{background:#dbeafe;color:#1d4ed8}
+.memo-icon{cursor:help;font-size:14px}
+.table-btn{border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.table-btn-send{background:var(--primary);color:#fff}
+.table-btn-done{background:#059669;color:#fff}
+.table-btn-done-static{display:inline-block;background:#e2e8f0;color:var(--text-muted);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700}
 .content{max-width:680px;margin:0 auto;padding:16px 14px 60px}
 .card{background:var(--white);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
 .card-title{font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
@@ -298,6 +310,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <!-- INQUIRY -->
 <div class="page" id="page-inquiry">
+<button class="refresh-btn" id="inquiryRefreshBtn" onclick="loadInquiries(true)">
+🔄 시트에서 최신 데이터 불러오기
+</button>
 <div class="search-row">
 <input class="search-input" type="text" id="inquirySearchInput" placeholder="🔍 이름, 연락처 검색" oninput="renderInquiryList()">
 </div>
@@ -796,17 +811,22 @@ function renderList(){
 }
 
 // ── 상담 운영 (문의DB) ──────────────────────────────────────────────
-async function loadInquiries(){
+async function loadInquiries(forceRefresh){
   const el=document.getElementById("inquiryList");
-  el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;
+  const btn=document.getElementById("inquiryRefreshBtn");
+  if(btn){btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";}
+  else{el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;}
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getInquiries');
     const data=await res.json();
     if(data.result!=="ok"){el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>${data.message||"불러오기 실패"}</div></div>`;return;}
     inquiries=data.inquiries||[];
     renderInquiryList();
+    if(forceRefresh)showToast(`✅ 시트에서 ${inquiries.length}건 불러왔어요!`);
   }catch(err){
     el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>`;
+  }finally{
+    if(btn){btn.classList.remove("loading");btn.textContent="🔄 시트에서 최신 데이터 불러오기";}
   }
 }
 function setInquiryFilter(status,el){
@@ -816,31 +836,61 @@ function setInquiryFilter(status,el){
   renderInquiryList();
 }
 const INQUIRY_STATUS_OPTIONS=["문의","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
+function daysSince(dateStr){
+  if(!dateStr)return "";
+  const d=new Date(dateStr);
+  if(isNaN(d))return "";
+  const diff=Math.floor((new Date().setHours(0,0,0,0)-d.setHours(0,0,0,0))/86400000);
+  return "D+"+diff;
+}
 function renderInquiryList(){
   const q=document.getElementById("inquirySearchInput").value.trim();
-  let filtered=inquiries.filter(r=>r.name.includes(q)||(r.phone||"").includes(q));
+  let filtered=inquiries.filter(r=>r.name.includes(q)||(r.phone||"").includes(q)||(r.realPhone||"").includes(q));
   if(inquiryFilter)filtered=filtered.filter(r=>r.status===inquiryFilter);
   const el=document.getElementById("inquiryList");
   if(!filtered.length){el.innerHTML=`<div class="empty"><div class="empty-icon">💬</div><div>해당하는 상담 건이 없습니다</div></div>`;return;}
-  el.innerHTML=filtered.map(r=>{
+
+  let html=`<div style="overflow-x:auto"><table class="inquiry-table"><thead><tr>
+    <th>No.</th><th>유형</th><th>이름</th><th>연락처</th><th>예약일시</th><th>경과일</th>
+    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>메모</th><th>발송</th><th>완료</th>
+  </tr></thead><tbody>`;
+
+  filtered.forEach((r,idx)=>{
     const statusOptions=INQUIRY_STATUS_OPTIONS.map(s=>`<option value="${s}"${s===r.status?" selected":""}>${s}</option>`).join("");
     const badgeClass=r.status?`st-${r.status}`:"";
-    return `<div class="record-card">
-    <div class="record-top">
-    <div><span class="record-name">${r.name}</span>${r.phone?`<span class="record-phone">${r.phone}</span>`:""}</div>
-    <div class="record-actions"><span class="record-date">${r.date||""}</span></div>
-    </div>
-    <div class="badge-row">
-    ${r.channel?`<span class="badge badge-other">${r.channel}</span>`:""}
-    ${r.staff?`<span class="badge badge-staff">담당: ${r.staff}</span>`:""}
-    <span class="inquiry-status-badge ${badgeClass}">${r.status||"미지정"}</span>
-    </div>
-    ${r.memo?`<div class="record-note">${r.memo}</div>`:""}
-    <div style="margin-top:8px;display:flex;justify-content:flex-end">
-    <select class="inquiry-status-select" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select>
-    </div>
-    </div>`;
-  }).join("");
+    const phoneShown=r.realPhone||r.phone||"-";
+    const isDone=r.status==="등록완료";
+    html+=`<tr>
+      <td>${idx+1}</td>
+      <td>${r.type?`<span class="mini-badge">${r.type}</span>`:""}</td>
+      <td class="cell-strong">${r.name}</td>
+      <td>${phoneShown}</td>
+      <td>${r.reservedAt&&r.reservedAt.trim()!=="NaN-NaN-NaN"?r.reservedAt:"-"}</td>
+      <td>${daysSince(r.date)}</td>
+      <td>${r.channel?`<span class="mini-badge mini-badge-blue">${r.channel}</span>`:"-"}</td>
+      <td>${r.item||"-"}</td>
+      <td>${r.staff||"-"}</td>
+      <td><select class="inquiry-status-select ${badgeClass}" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select></td>
+      <td>${r.memo?`<span title="${r.memo.replace(/"/g,'&quot;')}" class="memo-icon">📝</span>`:"-"}</td>
+      <td><button class="table-btn table-btn-send" onclick="sendInquiryReminder(${r.rowIndex},'${(phoneShown||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">발송</button></td>
+      <td>${isDone?`<span class="table-btn table-btn-done-static">완료됨</span>`:`<button class="table-btn table-btn-done" onclick="changeInquiryStatus(${r.rowIndex},'등록완료')">완료</button>`}</td>
+    </tr>`;
+  });
+
+  html+=`</tbody></table></div>`;
+  el.innerHTML=html;
+}
+
+async function sendInquiryReminder(rowIndex,phone,name){
+  if(!phone||phone==="-"){showToast("연락처가 없어 발송할 수 없어요");return;}
+  if(!confirm(name+"님("+phone+")에게 안내 문자를 발송할까요?"))return;
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"sendInquiryReminder",branch:BRANCH,phone:phone,name:name})});
+    showToast("발송 요청을 보냈어요");
+  }catch(err){
+    showToast("발송 실패, 다시 시도해주세요");
+  }
 }
 async function changeInquiryStatus(rowIndex,newStatus){
   // 기존 delete/update와 동일하게 no-cors로 전송 (결과 확인은 안 되지만 낙관적으로 화면 먼저 갱신)
@@ -857,14 +907,20 @@ async function changeInquiryStatus(rowIndex,newStatus){
 }
 
 // ── 문의자 통계 (문의→예약→방문→등록/미등록 퍼널 + 경로별) ────────────
-async function loadInquiryStats(){
+async function loadInquiryStats(forceRefresh){
   const el=document.getElementById("inquiryStatsContent");
+  // 이미 불러온 데이터가 있으면 그걸 재사용 (탭 전환할 때마다 매번 다시 안 불러옴 → 딜레이 감소)
+  if(!forceRefresh && inquiries.length>0){
+    renderInquiryStats(inquiries);
+    return;
+  }
   el.innerHTML=`<div class="empty"><div class="empty-icon">⏳</div><div>불러오는 중...</div></div>`;
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getInquiries');
     const data=await res.json();
     if(data.result!=="ok"){el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>${data.message||"불러오기 실패"}</div></div>`;return;}
-    renderInquiryStats(data.inquiries||[]);
+    inquiries=data.inquiries||[];
+    renderInquiryStats(inquiries);
   }catch(err){
     el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>`;
   }
@@ -919,7 +975,43 @@ function renderInquiryStats(list){
     </div>`;
   });
 
-  el.innerHTML=funnelHtml+channelHtml;
+  el.innerHTML=funnelHtml+channelHtml+buildChannelStageTable(list);
+}
+
+// 경로(채널)별로 각 단계에 몇 건씩 머물러 있는지 표로 보여줌 → 어느 채널이 어디서 이탈하는지 한눈에 파악
+function buildChannelStageTable(list){
+  const stages=["문의","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
+  const channelMap={};
+  list.forEach(r=>{
+    const ch=r.channel||"미지정";
+    if(!channelMap[ch])channelMap[ch]={};
+    const st=r.status||"문의";
+    channelMap[ch][st]=(channelMap[ch][st]||0)+1;
+  });
+  const channels=Object.keys(channelMap).sort((a,b)=>{
+    const totalA=Object.values(channelMap[a]).reduce((s,v)=>s+v,0);
+    const totalB=Object.values(channelMap[b]).reduce((s,v)=>s+v,0);
+    return totalB-totalA;
+  });
+
+  let html=`<div class="stat-section-title">경로별 단계 분포 (어느 단계에서 머물러 있는지)</div>`;
+  html+=`<div style="overflow-x:auto"><table class="inquiry-table" style="min-width:640px"><thead><tr><th>경로</th>`;
+  stages.forEach(s=>html+=`<th>${s}</th>`);
+  html+=`<th>합계</th></tr></thead><tbody>`;
+  channels.forEach(ch=>{
+    const row=channelMap[ch];
+    const total=Object.values(row).reduce((s,v)=>s+v,0);
+    html+=`<tr><td class="cell-strong">${ch}</td>`;
+    stages.forEach(s=>{
+      const v=row[s]||0;
+      const isDropOff=(s==="노쇼"||s==="미등록")&&v>0;
+      const isWin=s==="등록완료"&&v>0;
+      html+=`<td style="${isDropOff?"color:#dc2626;font-weight:800":isWin?"color:#059669;font-weight:800":""}">${v>0?v:"-"}</td>`;
+    });
+    html+=`<td class="cell-strong">${total}</td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  return html;
 }
 
 // ── 삭제 (커스텀 모달) ──────────────────────────────────────────────
