@@ -199,6 +199,26 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .error-sub{font-size:13px;color:var(--text-muted);line-height:1.6}
 .edit-modal-box{max-width:340px;text-align:left;max-height:85vh;overflow-y:auto}
 .edit-modal-box .modal-title{margin-bottom:14px;text-align:center}
+.send-target-card{background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1.5px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.send-target-card.checked{border-color:var(--primary);background:var(--primary-light)}
+.send-target-card input[type=checkbox]{width:19px;height:19px;margin-top:2px;flex-shrink:0;accent-color:var(--primary)}
+.send-target-info{flex:1}
+.send-target-name{font-size:14px;font-weight:800}
+.send-target-phone{font-size:12px;color:var(--text-muted);margin-left:6px}
+.send-target-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.send-status-badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px}
+.send-status-done{background:#d1fae5;color:#059669}
+.send-status-fail{background:#fee2e2;color:#dc2626}
+.send-status-wait{background:#fef9c3;color:#a16207}
+.select-all-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px}
+.select-all-row label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text-sub)}
+.select-all-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary)}
+.send-count-chip{font-size:12px;font-weight:800;color:var(--primary);background:var(--primary-light);padding:4px 10px;border-radius:99px}
+.tpl-textarea{width:100%;min-height:100px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:#fafbff;outline:none;resize:vertical}
+.tpl-hint{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5}
+.tpl-save-btn{width:100%;padding:11px;border:none;border-radius:10px;font-size:13px;font-weight:800;background:var(--primary);color:white;cursor:pointer;font-family:inherit;margin-top:10px}
+.send-selected-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:14px;font-weight:800;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;cursor:pointer;font-family:inherit;margin-top:10px;box-shadow:0 4px 18px rgba(37,99,235,.28)}
+.send-selected-btn:disabled{opacity:.5;pointer-events:none}
 </style>
 </head>
 <body>
@@ -230,6 +250,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <option value="stats">📊 방문자 통계</option>
 <option value="inquirystats">📈 문의자 통계</option>
 <option value="inquiry">💬 문의/예약자 관리</option>
+<option value="sendmgmt">📤 발송 관리</option>
 </select>
 </div>
 </div>
@@ -338,6 +359,29 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 🔄 시트에서 최신 데이터 불러오기
 </button>
 <div id="inquiryStatsContent"></div>
+</div>
+
+<!-- SEND MANAGEMENT -->
+<div class="page" id="page-sendmgmt">
+<div class="card">
+<div class="card-title">문자 문구</div>
+<textarea class="tpl-textarea" id="tplTextarea" placeholder="예: {이름}님, 방문해주셔서 감사합니다! 궁금하신 점 있으시면 언제든 연락주세요."></textarea>
+<div class="tpl-hint">문구 안에 <strong>{이름}</strong>을 넣으면 발송 시 대상자 이름으로 자동 치환돼요. 저장하면 시트(R2)에도 바로 반영돼요.</div>
+<button class="tpl-save-btn" id="tplSaveBtn" onclick="saveTemplate()">문구 저장</button>
+</div>
+
+<button class="refresh-btn" id="sendTargetRefreshBtn" onclick="loadSendTargets()">
+🔄 대상자 확인 (7일 미등록자)
+</button>
+
+<div class="card" style="margin-top:12px">
+<div class="select-all-row">
+<label><input type="checkbox" id="selectAllTargets" onchange="toggleSelectAllTargets(this)"> 전체 선택</label>
+<span class="send-count-chip" id="selectedCountChip">0명 선택됨</span>
+</div>
+<div id="sendTargetList"></div>
+<button class="send-selected-btn" id="sendSelectedBtn" onclick="sendSelectedTargets()" disabled>선택한 대상자에게 지금 발송하기</button>
+</div>
 </div>
 
 <!-- STATS -->
@@ -551,6 +595,10 @@ const MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbx8MZDlOGUh6BvS-
 const BRANCH = new URLSearchParams(window.location.search).get('branch') || '';
 const STORAGE_KEY = 'gym_v5_' + BRANCH;
 const SHEET_URL = MASTER_GAS_URL;
+// 발송관리(대상자확인/발송/문구수정)는 관리자 전용 액션이라 서버쪽 ADMIN_SECRET과 맞춰야 함.
+// ⚠️ 이 값은 브라우저 소스에 노출됩니다 — 통계 비밀번호(0000)와 동일한 수준의 "직원 전용" 보호이지,
+//    완전한 보안은 아니에요. 외부에 URL을 공유하지 않도록 주의해주세요.
+const ADMIN_SECRET = "hbAdmin7719";
 
 if (!BRANCH) {
   document.getElementById('errorScreen').style.display = 'block';
@@ -563,6 +611,18 @@ function init() {
   document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
   updateTotal();
   loadStaffList();
+}
+
+// ── 관리자 액션 공통 호출 (previewTargets / sendSelected / updateTemplate) ─────
+// Content-Type을 text/plain으로 보내면 브라우저가 preflight(OPTIONS)를 안 걸어서
+// Apps Script 응답을 정상적으로 읽을 수 있음 (application/json으로 보내면 막힘)
+async function callAdminAction(action, extra) {
+  const res = await fetch(SHEET_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action, branch: BRANCH, adminSecret: ADMIN_SECRET, ...extra })
+  });
+  return await res.json();
 }
 
 // ── 데이터 ────────────────────────────────────────────────────────────
@@ -613,6 +673,8 @@ let deleteTargetId=null;
 let editTargetId=null;
 let inquiries=[];
 let inquiryFilter="";
+let sendTargets=[];
+let selectedSendKeys=new Set();
 
 // ── 직원 목록 로드 ────────────────────────────────────────────────────
 async function loadStaffList(){
@@ -761,7 +823,7 @@ function resetForm(){
 
 // ── 탭 전환 ──────────────────────────────────────────────────────────
 function switchTab(tab){
-  if((tab==="stats"||tab==="list"||tab==="inquiry"||tab==="inquirystats")&&!statsUnlocked){
+  if((tab==="stats"||tab==="list"||tab==="inquiry"||tab==="inquirystats"||tab==="sendmgmt")&&!statsUnlocked){
     pendingStatsTab=tab;
     document.getElementById("pwInput").value="";
     document.getElementById("pwModal").classList.add("active");
@@ -794,6 +856,7 @@ function doSwitchTab(tab){
   if(tab==="stats")renderStats();
   if(tab==="inquiry")loadInquiries();
   if(tab==="inquirystats")loadInquiryStats();
+  if(tab==="sendmgmt"){loadTemplate();loadSendTargets();}
 }
 
 // ── 목록 ──────────────────────────────────────────────────────────────
@@ -911,6 +974,111 @@ async function changeInquiryStatus(rowIndex,newStatus){
     renderInquiryList();
   }catch(err){
     showToast("변경 실패, 다시 시도해주세요");
+  }
+}
+
+// ── 발송 관리 (문구 편집 + 대상자 확인 + 선택 발송) ──────────────────
+async function loadTemplate(){
+  try{
+    const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getTemplate');
+    const data=await res.json();
+    if(data.result==="ok")document.getElementById("tplTextarea").value=data.template||"";
+  }catch(err){console.warn("문구 로드 실패",err);}
+}
+async function saveTemplate(){
+  const btn=document.getElementById("tplSaveBtn");
+  const template=document.getElementById("tplTextarea").value;
+  btn.disabled=true;btn.textContent="저장 중...";
+  try{
+    const data=await callAdminAction("updateTemplate",{template});
+    if(data.result==="ok")showToast("✅ 문구가 저장되었어요");
+    else showToast("❌ "+(data.message||"저장 실패"));
+  }catch(err){
+    showToast("❌ 저장 실패, 다시 시도해주세요");
+  }finally{
+    btn.disabled=false;btn.textContent="문구 저장";
+  }
+}
+function sendTargetKey(t){return t.date+"|"+t.visitTime+"|"+t.name+"|"+t.phone;}
+async function loadSendTargets(){
+  const btn=document.getElementById("sendTargetRefreshBtn");
+  const el=document.getElementById("sendTargetList");
+  if(btn){btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";}
+  try{
+    const data=await callAdminAction("previewTargets");
+    if(data.result!=="ok"){showToast("❌ "+(data.message||"불러오기 실패"));return;}
+    sendTargets=data.targets||[];
+    selectedSendKeys=new Set(
+      sendTargets.filter(t=>t.sendStatus!=="발송완료").map(sendTargetKey)
+    ); // 기본값: 미발송자만 자동 체크
+    renderSendTargetList();
+    showToast(`✅ 대상자 ${sendTargets.length}명 불러왔어요`);
+  }catch(err){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>`;
+  }finally{
+    if(btn){btn.classList.remove("loading");btn.textContent="🔄 대상자 확인 (7일 미등록자)";}
+  }
+}
+function renderSendTargetList(){
+  const el=document.getElementById("sendTargetList");
+  if(!sendTargets.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>대상자가 없습니다</div></div>`;
+    updateSendSelectionUI();
+    return;
+  }
+  el.innerHTML=sendTargets.map(t=>{
+    const key=sendTargetKey(t);
+    const checked=selectedSendKeys.has(key);
+    const statusClass=t.sendStatus==="발송완료"?"send-status-done":t.sendStatus==="발송실패"?"send-status-fail":"send-status-wait";
+    return `<label class="send-target-card${checked?" checked":""}">
+      <input type="checkbox" data-key="${key.replace(/"/g,'&quot;')}" ${checked?"checked":""} onchange="onTargetCheck(this)">
+      <div class="send-target-info">
+        <span class="send-target-name">${t.name}</span><span class="send-target-phone">${t.phone}</span>
+        <div class="send-target-meta">
+          <span class="send-status-badge ${statusClass}">${t.sendStatus}</span>
+          <span class="mini-badge">방문일 ${t.date}</span>
+        </div>
+      </div>
+    </label>`;
+  }).join("");
+  updateSendSelectionUI();
+}
+function onTargetCheck(inputEl){
+  const key=inputEl.dataset.key;
+  if(inputEl.checked)selectedSendKeys.add(key);else selectedSendKeys.delete(key);
+  inputEl.closest(".send-target-card").classList.toggle("checked",inputEl.checked);
+  updateSendSelectionUI();
+}
+function toggleSelectAllTargets(checkboxEl){
+  if(checkboxEl.checked)selectedSendKeys=new Set(sendTargets.map(sendTargetKey));
+  else selectedSendKeys=new Set();
+  renderSendTargetList();
+}
+function updateSendSelectionUI(){
+  const count=selectedSendKeys.size;
+  document.getElementById("selectedCountChip").textContent=count+"명 선택됨";
+  document.getElementById("sendSelectedBtn").disabled=count===0;
+  document.getElementById("selectAllTargets").checked=sendTargets.length>0&&count===sendTargets.length;
+}
+async function sendSelectedTargets(){
+  const selected=sendTargets.filter(t=>selectedSendKeys.has(sendTargetKey(t)))
+    .map(t=>({date:t.date,visitTime:t.visitTime,name:t.name,phone:t.phone}));
+  if(!selected.length)return;
+  if(!confirm(selected.length+"명에게 지금 문자를 발송할까요?"))return;
+  const btn=document.getElementById("sendSelectedBtn");
+  btn.disabled=true;btn.textContent="발송 중...";
+  try{
+    const data=await callAdminAction("sendSelected",{selected});
+    if(data.result==="ok"){
+      showToast(`✅ ${data.sent}건 발송 완료`);
+      loadSendTargets();
+    }else{
+      showToast("❌ "+(data.message||"발송 실패"));
+    }
+  }catch(err){
+    showToast("❌ 발송 실패, 다시 시도해주세요");
+  }finally{
+    btn.disabled=false;btn.textContent="선택한 대상자에게 지금 발송하기";
   }
 }
 
