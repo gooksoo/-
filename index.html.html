@@ -616,13 +616,28 @@ function init() {
 // ── 관리자 액션 공통 호출 (previewTargets / sendSelected / updateTemplate) ─────
 // Content-Type을 text/plain으로 보내면 브라우저가 preflight(OPTIONS)를 안 걸어서
 // Apps Script 응답을 정상적으로 읽을 수 있음 (application/json으로 보내면 막힘)
-async function callAdminAction(action, extra) {
+async function callAction(action, extra) {
   const res = await fetch(SHEET_URL, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ action, branch: BRANCH, adminSecret: ADMIN_SECRET, ...extra })
+    body: JSON.stringify({ action, branch: BRANCH, ...extra })
   });
   return await res.json();
+}
+async function callAdminAction(action, extra) {
+  return callAction(action, { adminSecret: ADMIN_SECRET, ...extra });
+}
+// 문의/예약자 관리: 네이버 톡톡 문의에 담당자가 앱에서 직접 답장
+async function replyTalkTalk(rowIndex, talktalkUserId, name) {
+  const text = prompt(name + "님에게 보낼 답장 내용을 입력하세요:");
+  if (!text || !text.trim()) return;
+  try {
+    const data = await callAction("sendTalkTalkReply", { rowIndex, talktalkUserId, text: text.trim() });
+    if (data.result === "ok") { showToast("✅ 답장을 보냈어요"); loadInquiries(); }
+    else { showToast("❌ " + (data.message || "발송 실패")); }
+  } catch (err) {
+    showToast("❌ 발송 실패, 다시 시도해주세요");
+  }
 }
 
 // ── 데이터 ────────────────────────────────────────────────────────────
@@ -943,7 +958,9 @@ function renderInquiryList(){
       <td>${r.staff||"-"}</td>
       <td><select class="inquiry-status-select ${badgeClass}" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select></td>
       <td>${r.memo?`<span title="${r.memo.replace(/"/g,'&quot;')}" class="memo-icon">📝</span>`:"-"}</td>
-      <td><button class="table-btn table-btn-send" onclick="sendInquiryReminder(${r.rowIndex},'${(phoneShown||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">발송</button></td>
+      <td>${r.channel==="네이버톡톡"
+        ? `<button class="table-btn table-btn-send" onclick="replyTalkTalk(${r.rowIndex},'${(r.phone||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">답장</button>`
+        : `<button class="table-btn table-btn-send" onclick="sendInquiryReminder(${r.rowIndex},'${(phoneShown||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">발송</button>`}</td>
       <td>${isDone?`<span class="table-btn table-btn-done-static">완료됨</span>`:`<button class="table-btn table-btn-done" onclick="changeInquiryStatus(${r.rowIndex},'등록완료')">완료</button>`}</td>
     </tr>`;
   });
