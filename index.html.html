@@ -4,14 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>고객 방문 관리</title>
-
-<!-- 아이폰: 홈 화면 추가 시 전체화면 앱처럼 실행 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="고객 방문 관리">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
-<!-- 안드로이드: 홈 화면 추가 시 앱처럼 실행 -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#2563eb">
 <link rel="icon" href="favicon.png">
@@ -219,6 +215,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tpl-save-btn{width:100%;padding:11px;border:none;border-radius:10px;font-size:13px;font-weight:800;background:var(--primary);color:white;cursor:pointer;font-family:inherit;margin-top:10px}
 .send-selected-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:14px;font-weight:800;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;cursor:pointer;font-family:inherit;margin-top:10px;box-shadow:0 4px 18px rgba(37,99,235,.28)}
 .send-selected-btn:disabled{opacity:.5;pointer-events:none}
+.chat-modal-box{max-width:380px;width:100%;padding:0;overflow:hidden;text-align:left;display:flex;flex-direction:column;max-height:80vh}
+.chat-modal-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.chat-modal-title{font-size:15px;font-weight:800}
+.chat-modal-close{background:none;border:none;font-size:18px;color:var(--text-muted);cursor:pointer;padding:4px}
+.chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#f8faff;min-height:120px}
+.chat-bubble{max-width:78%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap}
+.chat-bubble.customer{align-self:flex-start;background:white;border:1px solid var(--border);border-bottom-left-radius:4px}
+.chat-bubble.staff{align-self:flex-end;background:var(--primary);color:white;border-bottom-right-radius:4px}
+.chat-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:white;flex-shrink:0}
+.chat-input-row input{flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:99px;font-size:13px;font-family:inherit;outline:none}
+.chat-send-btn{padding:10px 16px;border:none;border-radius:99px;background:var(--primary);color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.chat-empty{text-align:center;color:var(--text-muted);font-size:12px;padding:20px 0}
 </style>
 </head>
 <body>
@@ -587,6 +595,21 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
+<!-- CHAT MODAL -->
+<div class="modal-overlay" id="chatModal">
+<div class="modal-box chat-modal-box">
+<div class="chat-modal-header">
+<div class="chat-modal-title" id="chatModalTitle">대화</div>
+<button class="chat-modal-close" onclick="closeChatModal()">✕</button>
+</div>
+<div class="chat-body" id="chatBody"></div>
+<div class="chat-input-row">
+<input type="text" id="chatInput" placeholder="답장 입력..." onkeydown="if(event.key==='Enter')sendChatReply()">
+<button class="chat-send-btn" onclick="sendChatReply()">전송</button>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
@@ -595,9 +618,6 @@ const MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbx8MZDlOGUh6BvS-
 const BRANCH = new URLSearchParams(window.location.search).get('branch') || '';
 const STORAGE_KEY = 'gym_v5_' + BRANCH;
 const SHEET_URL = MASTER_GAS_URL;
-// 발송관리(대상자확인/발송/문구수정)는 관리자 전용 액션이라 서버쪽 ADMIN_SECRET과 맞춰야 함.
-// ⚠️ 이 값은 브라우저 소스에 노출됩니다 — 통계 비밀번호(0000)와 동일한 수준의 "직원 전용" 보호이지,
-//    완전한 보안은 아니에요. 외부에 URL을 공유하지 않도록 주의해주세요.
 const ADMIN_SECRET = "hbAdmin7719";
 
 if (!BRANCH) {
@@ -613,9 +633,6 @@ function init() {
   loadStaffList();
 }
 
-// ── 관리자 액션 공통 호출 (previewTargets / sendSelected / updateTemplate) ─────
-// Content-Type을 text/plain으로 보내면 브라우저가 preflight(OPTIONS)를 안 걸어서
-// Apps Script 응답을 정상적으로 읽을 수 있음 (application/json으로 보내면 막힘)
 async function callAction(action, extra) {
   const res = await fetch(SHEET_URL, {
     method: "POST",
@@ -627,14 +644,58 @@ async function callAction(action, extra) {
 async function callAdminAction(action, extra) {
   return callAction(action, { adminSecret: ADMIN_SECRET, ...extra });
 }
-// 문의/예약자 관리: 네이버 톡톡 문의에 담당자가 앱에서 직접 답장
-async function replyTalkTalk(rowIndex, talktalkUserId, name) {
-  const text = prompt(name + "님에게 보낼 답장 내용을 입력하세요:");
-  if (!text || !text.trim()) return;
+
+// ── 채팅 형식 대화창 (네이버 톡톡 문의) ────────────────────────────
+let chatTargetRow = null, chatTargetUserId = null, chatTargetName = null;
+
+function parseChatMemo(memo) {
+  if (!memo) return [];
+  return memo.split("\n").filter(l => l.trim()).map(line => {
+    const m = line.match(/^((?:\[[^\]]+\])+)\s*(.*)$/);
+    if (!m) return { side: "customer", text: line };
+    const tags = m[1];
+    const text = m[2];
+    const side = tags.indexOf("[답장]") !== -1 ? "staff" : "customer";
+    return { side, text };
+  });
+}
+function openChatModal(rowIndex) {
+  const item = inquiries.find(r => r.rowIndex === rowIndex);
+  if (!item) return;
+  chatTargetRow = rowIndex;
+  chatTargetUserId = item.phone;
+  chatTargetName = item.name;
+  document.getElementById("chatModalTitle").textContent = item.name + "님과의 대화";
+  renderChatBody(item.memo);
+  document.getElementById("chatInput").value = "";
+  document.getElementById("chatModal").classList.add("active");
+  setTimeout(() => document.getElementById("chatInput").focus(), 150);
+}
+function closeChatModal() {
+  document.getElementById("chatModal").classList.remove("active");
+  chatTargetRow = null; chatTargetUserId = null; chatTargetName = null;
+}
+function renderChatBody(memo) {
+  const msgs = parseChatMemo(memo);
+  const body = document.getElementById("chatBody");
+  if (!msgs.length) { body.innerHTML = `<div class="chat-empty">대화 내용이 없습니다</div>`; return; }
+  body.innerHTML = msgs.map(m => `<div class="chat-bubble ${m.side}">${m.text.replace(/</g,"&lt;")}</div>`).join("");
+  body.scrollTop = body.scrollHeight;
+}
+async function sendChatReply() {
+  const text = document.getElementById("chatInput").value.trim();
+  if (!text || !chatTargetRow) return;
   try {
-    const data = await callAction("sendTalkTalkReply", { rowIndex, talktalkUserId, text: text.trim() });
-    if (data.result === "ok") { showToast("✅ 답장을 보냈어요"); loadInquiries(); }
-    else { showToast("❌ " + (data.message || "발송 실패")); }
+    const data = await callAction("sendTalkTalkReply", { rowIndex: chatTargetRow, talktalkUserId: chatTargetUserId, text });
+    if (data.result === "ok") {
+      document.getElementById("chatInput").value = "";
+      const item = inquiries.find(r => r.rowIndex === chatTargetRow);
+      if (item) item.memo = (item.memo || "") + "\n[답장] " + text;
+      renderChatBody(item ? item.memo : "");
+      showToast("✅ 답장을 보냈어요");
+    } else {
+      showToast("❌ " + (data.message || "발송 실패"));
+    }
   } catch (err) {
     showToast("❌ 발송 실패, 다시 시도해주세요");
   }
@@ -691,7 +752,6 @@ let inquiryFilter="";
 let sendTargets=[];
 let selectedSendKeys=new Set();
 
-// ── 직원 목록 로드 ────────────────────────────────────────────────────
 async function loadStaffList(){
   try{
     const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH));
@@ -706,9 +766,7 @@ function populateStaffSelect(id){
   sel.innerHTML=`<option value="">담당자 선택</option>`+staffList.map(s=>`<option value="${s}">${s}</option>`).join("");
 }
 
-// ── 시트 동기화 ───────────────────────────────────────────────────────
 async function syncFromSheet(){
-  // 지금 눌린 버튼이 어느 페이지 것이든 그 버튼 자체를 로딩 상태로 표시
   const btn=(event&&event.target&&event.target.closest(".refresh-btn"))||document.getElementById("refreshBtn");
   if(btn){btn.classList.add("loading");btn.textContent="⏳ 불러오는 중...";}
   try{
@@ -732,7 +790,6 @@ async function syncFromSheet(){
   }
 }
 
-// ── 시트 저장 ─────────────────────────────────────────────────────────
 async function syncToSheet(r){
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
@@ -752,7 +809,6 @@ async function syncUpdateToSheet(original,updated){
   }catch(e){console.warn("시트 수정 동기화 실패",e);}
 }
 
-// ── 폼 ────────────────────────────────────────────────────────────────
 function formatPhone(i){let v=i.value.replace(/\D/g,"");if(v.length<=3)i.value=v;else if(v.length<=7)i.value=v.slice(0,3)+"-"+v.slice(3);else i.value=v.slice(0,3)+"-"+v.slice(3,7)+"-"+v.slice(7,11);}
 function btnHTML(s,cat){
   const sub=(s.id==="powerlink"||s.id==="mapsearch"||s.id==="blog")?`<span class="src-sub">(네이버)</span>`:"";
@@ -843,7 +899,7 @@ function switchTab(tab){
     document.getElementById("pwInput").value="";
     document.getElementById("pwModal").classList.add("active");
     setTimeout(()=>document.getElementById("pwInput").focus(),100);
-    document.getElementById("navSelect").value="form"; // 인증 전엔 화면 안 넘어가므로 셀렉트 원복
+    document.getElementById("navSelect").value="form";
     return;
   }
   doSwitchTab(tab);
@@ -938,7 +994,7 @@ function renderInquiryList(){
 
   let html=`<div style="overflow-x:auto"><table class="inquiry-table"><thead><tr>
     <th>No.</th><th>유형</th><th>이름</th><th>연락처</th><th>예약일시</th><th>경과일</th>
-    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>메모</th><th>발송</th><th>완료</th>
+    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>대화/메모</th><th>발송</th><th>완료</th>
   </tr></thead><tbody>`;
 
   filtered.forEach((r,idx)=>{
@@ -946,6 +1002,10 @@ function renderInquiryList(){
     const badgeClass=r.status?`st-${r.status}`:"";
     const phoneShown=r.realPhone||r.phone||"-";
     const isDone=r.status==="등록완료";
+    const isTalkTalk=r.channel==="네이버톡톡";
+    const memoCell=isTalkTalk
+      ? (r.memo?`<button class="table-btn table-btn-send" onclick="openChatModal(${r.rowIndex})">💬 대화</button>`:"-")
+      : (r.memo?`<span title="${r.memo.replace(/"/g,'&quot;')}" class="memo-icon">📝</span>`:"-");
     html+=`<tr>
       <td>${idx+1}</td>
       <td>${r.type?`<span class="mini-badge">${r.type}</span>`:""}</td>
@@ -957,9 +1017,9 @@ function renderInquiryList(){
       <td>${r.item||"-"}</td>
       <td>${r.staff||"-"}</td>
       <td><select class="inquiry-status-select ${badgeClass}" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select></td>
-      <td>${r.memo?`<span title="${r.memo.replace(/"/g,'&quot;')}" class="memo-icon">📝</span>`:"-"}</td>
-      <td>${r.channel==="네이버톡톡"
-        ? `<button class="table-btn table-btn-send" onclick="replyTalkTalk(${r.rowIndex},'${(r.phone||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">답장</button>`
+      <td>${memoCell}</td>
+      <td>${isTalkTalk
+        ? `<button class="table-btn table-btn-send" onclick="openChatModal(${r.rowIndex})">채팅</button>`
         : `<button class="table-btn table-btn-send" onclick="sendInquiryReminder(${r.rowIndex},'${(phoneShown||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">발송</button>`}</td>
       <td>${isDone?`<span class="table-btn table-btn-done-static">완료됨</span>`:`<button class="table-btn table-btn-done" onclick="changeInquiryStatus(${r.rowIndex},'등록완료')">완료</button>`}</td>
     </tr>`;
@@ -981,7 +1041,6 @@ async function sendInquiryReminder(rowIndex,phone,name){
   }
 }
 async function changeInquiryStatus(rowIndex,newStatus){
-  // 기존 delete/update와 동일하게 no-cors로 전송 (결과 확인은 안 되지만 낙관적으로 화면 먼저 갱신)
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"updateInquiryStatus",branch:BRANCH,rowIndex:rowIndex,newStatus:newStatus})});
@@ -1027,7 +1086,7 @@ async function loadSendTargets(){
     sendTargets=data.targets||[];
     selectedSendKeys=new Set(
       sendTargets.filter(t=>t.sendStatus!=="발송완료").map(sendTargetKey)
-    ); // 기본값: 미발송자만 자동 체크
+    );
     renderSendTargetList();
     showToast(`✅ 대상자 ${sendTargets.length}명 불러왔어요`);
   }catch(err){
@@ -1099,11 +1158,10 @@ async function sendSelectedTargets(){
   }
 }
 
-// ── 문의자 통계 (문의→예약→방문→등록/미등록 퍼널 + 경로별) ────────────
+// ── 문의자 통계 ────────────────────────────────────────────────
 async function loadInquiryStats(forceRefresh){
   const el=document.getElementById("inquiryStatsContent");
   const btn=document.getElementById("inquiryStatsRefreshBtn");
-  // 이미 불러온 데이터가 있으면 그걸 재사용 (탭 전환할 때마다 매번 다시 안 불러옴 → 딜레이 감소)
   if(!forceRefresh && inquiries.length>0){
     renderInquiryStats(inquiries);
     return;
@@ -1127,7 +1185,6 @@ function renderInquiryStats(list){
   const el=document.getElementById("inquiryStatsContent");
   if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><div>문의 데이터가 없습니다</div></div>`;return;}
 
-  // 퍼널: 문의(전체) → 예약(상태가 문의 단계를 넘어선 건) → 방문(상담을 실제로 진행/완료/보류/등록/미등록까지 간 건, 노쇼 제외) → 등록완료
   const total=list.length;
   const reserved=list.filter(r=>r.status&&r.status!=="문의").length;
   const visited=list.filter(r=>["상담진행","보류","등록완료","미등록"].includes(r.status)).length;
@@ -1150,7 +1207,6 @@ function renderInquiryStats(list){
   funnelHtml+=`</div>`;
   funnelHtml+=`<div class="funnel-step" style="background:var(--primary-light);border-color:var(--primary-mid)"><div class="funnel-label">미등록(이탈)</div><div class="funnel-count" style="color:#dc2626">${unregistered}건</div><div class="funnel-rate">${total>0?Math.round(unregistered/total*100):0}%</div></div>`;
 
-  // 경로별 통계 (문의 전체 건수 + 그중 등록완료 건수로 전환율 계산)
   const channelMap={};
   list.forEach(r=>{
     const ch=r.channel||"미지정";
@@ -1176,7 +1232,6 @@ function renderInquiryStats(list){
   el.innerHTML=funnelHtml+channelHtml+buildChannelStageTable(list);
 }
 
-// 경로(채널)별로 각 단계에 몇 건씩 머물러 있는지 표로 보여줌 → 어느 채널이 어디서 이탈하는지 한눈에 파악
 function buildChannelStageTable(list){
   const stages=["문의","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
   const channelMap={};
@@ -1469,7 +1524,7 @@ function exportCSV(){
   const h=["날짜","시간","이름","연락처","분류","경로","검색어","지인이름","담당자","메모"];
   const rows=records.map(r=>[r.date,r.visitTime||"",r.name,r.phone,r.sourceCat||"",r.sourceLabel||"",r.keyword||"",r.refname||"",r.staff||"",r.memo||""]);
   const csv=[h,...rows].map(row=>row.map(v=>`"${(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"}));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"}));
   a.download=`고객기록_${BRANCH}_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast("CSV 저장 완료!");
 }
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));updateTotal();}
@@ -1478,5 +1533,5 @@ function showToast(msg){const t=document.getElementById("toast");t.textContent=m
 
 if (BRANCH) init();
 </script>
-<script>(function(){var s=document.createElement('script');s.src='https://cdn.solapi.com/talk-ui/stable/widget/widget.iife.js';s.async=true;s.onload=function(){window.SolapiSupport.boot({pluginKey:'pk_3ac7b38de8f0432b144f40d83f2f7c47'});};document.head.appendChild(s);})();</script></body>
+</body>
 </html>
