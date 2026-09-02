@@ -254,11 +254,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="nav-select-wrap">
 <select id="navSelect" class="nav-select" onchange="switchTab(this.value)">
 <option value="form">✏️ 방문접수</option>
-<option value="list">📋 방문자 관리</option>
+<option value="list">📋 방문자관리</option>
 <option value="stats">📊 방문자 통계</option>
-<option value="inquirystats">📈 문의자 통계</option>
 <option value="inquiry">💬 문의/예약자 관리</option>
-<option value="sendmgmt">📤 발송 관리</option>
+<option value="inquirystats">📈 문의자 통계</option>
+<option value="sendmgmt">📤 자동문자발송</option>
 </select>
 </div>
 </div>
@@ -994,18 +994,15 @@ function renderInquiryList(){
 
   let html=`<div style="overflow-x:auto"><table class="inquiry-table"><thead><tr>
     <th>No.</th><th>유형</th><th>이름</th><th>연락처</th><th>예약일시</th><th>경과일</th>
-    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>대화/메모</th><th>발송</th><th>완료</th>
+    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>발송</th><th>완료</th>
   </tr></thead><tbody>`;
 
   filtered.forEach((r,idx)=>{
     const statusOptions=INQUIRY_STATUS_OPTIONS.map(s=>`<option value="${s}"${s===r.status?" selected":""}>${s}</option>`).join("");
     const badgeClass=r.status?`st-${r.status}`:"";
-    const phoneShown=r.realPhone||r.phone||"-";
+    const phoneShown=r.realPhone||"-";
     const isDone=r.status==="등록완료";
     const isTalkTalk=r.channel==="네이버톡톡";
-    const memoCell=isTalkTalk
-      ? (r.memo?`<button class="table-btn table-btn-send" onclick="openChatModal(${r.rowIndex})">💬 대화</button>`:"-")
-      : (r.memo?`<span title="${r.memo.replace(/"/g,'&quot;')}" class="memo-icon">📝</span>`:"-");
     html+=`<tr>
       <td>${idx+1}</td>
       <td>${r.type?`<span class="mini-badge">${r.type}</span>`:""}</td>
@@ -1017,9 +1014,8 @@ function renderInquiryList(){
       <td>${r.item||"-"}</td>
       <td>${r.staff||"-"}</td>
       <td><select class="inquiry-status-select ${badgeClass}" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select></td>
-      <td>${memoCell}</td>
       <td>${isTalkTalk
-        ? `<button class="table-btn table-btn-send" onclick="openChatModal(${r.rowIndex})">채팅</button>`
+        ? `<button class="table-btn table-btn-send" onclick="openChatModal(${r.rowIndex})">💬 채팅</button>`
         : `<button class="table-btn table-btn-send" onclick="sendInquiryReminder(${r.rowIndex},'${(phoneShown||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">발송</button>`}</td>
       <td>${isDone?`<span class="table-btn table-btn-done-static">완료됨</span>`:`<button class="table-btn table-btn-done" onclick="changeInquiryStatus(${r.rowIndex},'등록완료')">완료</button>`}</td>
     </tr>`;
