@@ -373,7 +373,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="card">
 <div class="card-title">문자 문구</div>
 <textarea class="tpl-textarea" id="tplTextarea" placeholder="예: {이름}님, 방문해주셔서 감사합니다! 궁금하신 점 있으시면 언제든 연락주세요."></textarea>
-<div class="tpl-hint">문구 안에 <strong>{이름}</strong>을 넣으면 발송 시 대상자 이름으로 자동 치환돼요. 저장하면 문자템플릿 탭("워크아웃 7일 안내" 행)에도 바로 반영돼요.</div>
+<div class="tpl-hint">문구 안에 <strong>#고객명#</strong>(또는 {이름}), <strong>#센터명#</strong>을 넣으면 발송 시 자동 치환돼요. 저장하면 문자템플릿 탭("워크아웃 7일" 행)에도 바로 반영돼요.</div>
 <button class="tpl-save-btn" id="tplSaveBtn" onclick="saveTemplate()">문구 저장</button>
 </div>
 
@@ -755,10 +755,19 @@ async function openTemplateModal(rowIndex){
   applyTemplateToTextarea(item.name);
   document.getElementById("templateModal").classList.add("active");
 }
+const CENTER_DISPLAY_NAME={"강남역점":"헬스보이짐 강남역점","권선점":"헬스보이짐 권선점"};
+function fillMessagePlaceholders(template,name){
+  const center=CENTER_DISPLAY_NAME[BRANCH]||BRANCH;
+  return String(template||"")
+    .replace(/\{이름\}/g,name)
+    .replace(/#고객명#/g,name)
+    .replace(/#회원명#/g,name)
+    .replace(/#센터명#/g,center);
+}
 function applyTemplateToTextarea(name){
   const sel=document.getElementById("templateSelect");
   const t=msgTemplates.find(t=>t.name===sel.value);
-  document.getElementById("templateTextarea").value=t?t.text.replace(/{이름}/g,name):"";
+  document.getElementById("templateTextarea").value=t?fillMessagePlaceholders(t.text,name):"";
 }
 function onTemplateSelectChange(){
   const item=inquiries.find(r=>r.rowIndex===templateTargetRow);
