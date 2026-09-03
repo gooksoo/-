@@ -32,9 +32,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .inquiry-status-badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.2px}
 .st-문의{background:#e0f2fe;color:#0284c7}
 .st-상담예약{background:#fef9c3;color:#a16207}
-.st-상담진행{background:#ede9fe;color:#7c3aed}
-.st-노쇼{background:#fee2e2;color:#dc2626}
-.st-보류{background:#f1f5f9;color:#475569}
+.st-체험예약{background:#ede9fe;color:#7c3aed}
+.st-예약노쇼{background:#fee2e2;color:#dc2626}
 .st-미등록{background:#fee2e2;color:#dc2626}
 .st-등록완료{background:#d1fae5;color:#059669}
 .inquiry-filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
@@ -63,6 +62,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .memo-icon{cursor:help;font-size:14px}
 .table-btn{border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
 .table-btn-send{background:var(--primary);color:#fff}
+.table-btn-chat{background:#a3e635;color:#365314}
 .table-btn-done{background:#059669;color:#fff}
 .table-btn-done-static{display:inline-block;background:#e2e8f0;color:var(--text-muted);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700}
 .content{max-width:680px;margin:0 auto;padding:16px 14px 60px}
@@ -352,9 +352,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <button class="inquiry-filter-btn active" data-status="" onclick="setInquiryFilter('',this)">전체</button>
 <button class="inquiry-filter-btn" data-status="문의" onclick="setInquiryFilter('문의',this)">문의</button>
 <button class="inquiry-filter-btn" data-status="상담예약" onclick="setInquiryFilter('상담예약',this)">상담예약</button>
-<button class="inquiry-filter-btn" data-status="상담진행" onclick="setInquiryFilter('상담진행',this)">상담진행</button>
-<button class="inquiry-filter-btn" data-status="노쇼" onclick="setInquiryFilter('노쇼',this)">노쇼</button>
-<button class="inquiry-filter-btn" data-status="보류" onclick="setInquiryFilter('보류',this)">보류</button>
+<button class="inquiry-filter-btn" data-status="체험예약" onclick="setInquiryFilter('체험예약',this)">체험예약</button>
+<button class="inquiry-filter-btn" data-status="예약노쇼" onclick="setInquiryFilter('예약노쇼',this)">예약노쇼</button>
 <button class="inquiry-filter-btn" data-status="미등록" onclick="setInquiryFilter('미등록',this)">미등록</button>
 <button class="inquiry-filter-btn" data-status="등록완료" onclick="setInquiryFilter('등록완료',this)">등록완료</button>
 </div>
@@ -374,7 +373,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="card">
 <div class="card-title">문자 문구</div>
 <textarea class="tpl-textarea" id="tplTextarea" placeholder="예: {이름}님, 방문해주셔서 감사합니다! 궁금하신 점 있으시면 언제든 연락주세요."></textarea>
-<div class="tpl-hint">문구 안에 <strong>{이름}</strong>을 넣으면 발송 시 대상자 이름으로 자동 치환돼요. 저장하면 시트(R2)에도 바로 반영돼요.</div>
+<div class="tpl-hint">문구 안에 <strong>{이름}</strong>을 넣으면 발송 시 대상자 이름으로 자동 치환돼요. 저장하면 문자템플릿 탭("워크아웃 7일 안내" 행)에도 바로 반영돼요.</div>
 <button class="tpl-save-btn" id="tplSaveBtn" onclick="saveTemplate()">문구 저장</button>
 </div>
 
@@ -610,6 +609,29 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 </div>
 
+<!-- TEMPLATE SEND MODAL -->
+<div class="modal-overlay" id="templateModal">
+<div class="modal-box chat-modal-box">
+<div class="chat-modal-header">
+<div class="chat-modal-title" id="templateModalTitle">알림문자 발송</div>
+<button class="chat-modal-close" onclick="closeTemplateModal()">✕</button>
+</div>
+<div style="padding:14px;overflow-y:auto;flex:1">
+<div class="field">
+<label>템플릿 선택 (경과일에 맞는 템플릿이 기본 선택돼요)</label>
+<select id="templateSelect" onchange="onTemplateSelectChange()"></select>
+</div>
+<div class="field" style="margin-bottom:0">
+<label>발송 내용 (수정 가능)</label>
+<textarea id="templateTextarea" style="min-height:130px"></textarea>
+</div>
+</div>
+<div class="chat-input-row" style="justify-content:flex-end">
+<button class="chat-send-btn" id="templateSendBtn" onclick="sendTemplateMessage()">발송</button>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
@@ -698,6 +720,70 @@ async function sendChatReply() {
     }
   } catch (err) {
     showToast("❌ 발송 실패, 다시 시도해주세요");
+  }
+}
+
+// ── 알림문자 발송 (진행상태 + 경과일 기준 템플릿 추천) ────────────────
+let msgTemplates = [];
+let templateTargetRow = null;
+
+async function loadMsgTemplates(){
+  try{
+    const res=await fetch(SHEET_URL+'?branch='+encodeURIComponent(BRANCH)+'&action=getMsgTemplates');
+    const data=await res.json();
+    if(data.result==="ok")msgTemplates=data.templates||[];
+  }catch(err){console.warn("템플릿 로드 실패",err);}
+}
+function pickTemplateForStatus(status,days){
+  return msgTemplates.find(t=>t.triggerStatuses.includes(status)&&days>=t.minDay)||null;
+}
+async function openTemplateModal(rowIndex){
+  const item=inquiries.find(r=>r.rowIndex===rowIndex);
+  if(!item)return;
+  if(!item.realPhone){showToast("연락처가 없어 발송할 수 없어요");return;}
+  if(!msgTemplates.length)await loadMsgTemplates();
+  if(!msgTemplates.length){showToast("등록된 템플릿이 없어요. 시트에 문자템플릿 탭을 먼저 만들어주세요");return;}
+
+  templateTargetRow=rowIndex;
+  const days=parseInt((daysSince(item.date)||"D+0").replace("D+",""))||0;
+  const matched=pickTemplateForStatus(item.status,days);
+
+  const sel=document.getElementById("templateSelect");
+  sel.innerHTML=msgTemplates.map(t=>`<option value="${t.name.replace(/"/g,'&quot;')}">${t.name} (${t.triggerStatuses.join('/')||"상태무관"}, D+${t.minDay}~)</option>`).join("");
+  sel.value=matched?matched.name:msgTemplates[0].name;
+  document.getElementById("templateModalTitle").textContent=item.name+"님에게 알림문자 발송";
+  applyTemplateToTextarea(item.name);
+  document.getElementById("templateModal").classList.add("active");
+}
+function applyTemplateToTextarea(name){
+  const sel=document.getElementById("templateSelect");
+  const t=msgTemplates.find(t=>t.name===sel.value);
+  document.getElementById("templateTextarea").value=t?t.text.replace(/{이름}/g,name):"";
+}
+function onTemplateSelectChange(){
+  const item=inquiries.find(r=>r.rowIndex===templateTargetRow);
+  applyTemplateToTextarea(item?item.name:"");
+}
+function closeTemplateModal(){
+  document.getElementById("templateModal").classList.remove("active");
+  templateTargetRow=null;
+}
+async function sendTemplateMessage(){
+  const item=inquiries.find(r=>r.rowIndex===templateTargetRow);
+  if(!item)return;
+  const text=document.getElementById("templateTextarea").value.trim();
+  if(!text){showToast("내용을 입력해주세요");return;}
+  const btn=document.getElementById("templateSendBtn");
+  btn.disabled=true;btn.textContent="발송 중...";
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"sendInquiryReminder",branch:BRANCH,phone:item.realPhone,name:item.name,template:text})});
+    showToast("발송 요청을 보냈어요");
+    closeTemplateModal();
+  }catch(err){
+    showToast("발송 실패, 다시 시도해주세요");
+  }finally{
+    btn.disabled=false;btn.textContent="발송";
   }
 }
 
@@ -977,7 +1063,7 @@ function setInquiryFilter(status,el){
   el.classList.add("active");
   renderInquiryList();
 }
-const INQUIRY_STATUS_OPTIONS=["문의","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
+const INQUIRY_STATUS_OPTIONS=["문의","상담예약","체험예약","예약노쇼","미등록","등록완료"];
 function daysSince(dateStr){
   if(!dateStr)return "";
   const d=new Date(dateStr);
@@ -994,7 +1080,7 @@ function renderInquiryList(){
 
   let html=`<div style="overflow-x:auto"><table class="inquiry-table"><thead><tr>
     <th>No.</th><th>유형</th><th>이름</th><th>연락처</th><th>예약일시</th><th>경과일</th>
-    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>발송</th><th>완료</th>
+    <th>유입경로</th><th>종목</th><th>담당자</th><th>진행상태</th><th>문의톡</th><th>알림문자 발송</th><th>완료</th>
   </tr></thead><tbody>`;
 
   filtered.forEach((r,idx)=>{
@@ -1015,8 +1101,11 @@ function renderInquiryList(){
       <td>${r.staff||"-"}</td>
       <td><select class="inquiry-status-select ${badgeClass}" onchange="changeInquiryStatus(${r.rowIndex},this.value)">${statusOptions}</select></td>
       <td>${isTalkTalk
-        ? `<button class="table-btn table-btn-send" onclick="openChatModal(${r.rowIndex})">💬 채팅</button>`
-        : `<button class="table-btn table-btn-send" onclick="sendInquiryReminder(${r.rowIndex},'${(phoneShown||"").replace(/'/g,"")}','${r.name.replace(/'/g,"")}')">발송</button>`}</td>
+        ? `<button class="table-btn table-btn-chat" onclick="openChatModal(${r.rowIndex})">💬 채팅</button>`
+        : "-"}</td>
+      <td>${phoneShown!=="-"
+        ? `<button class="table-btn table-btn-send" onclick="openTemplateModal(${r.rowIndex})">발송</button>`
+        : "-"}</td>
       <td>${isDone?`<span class="table-btn table-btn-done-static">완료됨</span>`:`<button class="table-btn table-btn-done" onclick="changeInquiryStatus(${r.rowIndex},'등록완료')">완료</button>`}</td>
     </tr>`;
   });
@@ -1183,7 +1272,7 @@ function renderInquiryStats(list){
 
   const total=list.length;
   const reserved=list.filter(r=>r.status&&r.status!=="문의").length;
-  const visited=list.filter(r=>["상담진행","보류","등록완료","미등록"].includes(r.status)).length;
+  const visited=list.filter(r=>["체험예약","미등록","등록완료"].includes(r.status)).length;
   const registered=list.filter(r=>r.status==="등록완료").length;
   const unregistered=list.filter(r=>r.status==="미등록").length;
 
@@ -1229,7 +1318,7 @@ function renderInquiryStats(list){
 }
 
 function buildChannelStageTable(list){
-  const stages=["문의","상담예약","상담진행","노쇼","보류","미등록","등록완료"];
+  const stages=["문의","상담예약","체험예약","예약노쇼","미등록","등록완료"];
   const channelMap={};
   list.forEach(r=>{
     const ch=r.channel||"미지정";
@@ -1253,7 +1342,7 @@ function buildChannelStageTable(list){
     html+=`<tr><td class="cell-strong">${ch}</td>`;
     stages.forEach(s=>{
       const v=row[s]||0;
-      const isDropOff=(s==="노쇼"||s==="미등록")&&v>0;
+      const isDropOff=(s==="예약노쇼"||s==="미등록")&&v>0;
       const isWin=s==="등록완료"&&v>0;
       html+=`<td style="${isDropOff?"color:#dc2626;font-weight:800":isWin?"color:#059669;font-weight:800":""}">${v>0?v:"-"}</td>`;
     });
